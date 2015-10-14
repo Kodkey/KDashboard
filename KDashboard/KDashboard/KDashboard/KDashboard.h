@@ -21,6 +21,9 @@
 
 @protocol KDashboardDelegate <NSObject>
 @optional
+-(void)startDraggingFromDashboard:(KDashboard*)dashboard;
+-(void)endDraggingFromDashboard:(KDashboard*)dashboard;
+
 -(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSUInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
 -(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSUInteger)index;
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSUInteger)index;
@@ -31,12 +34,12 @@
 
 
 
-@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
+@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate, UIGestureRecognizerDelegate>
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
 
--(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier;
+-(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier andAssociateToThisViewController:(UIViewController*)viewController;
 
 -(void) associateADeleteZone:(UIView*)deleteZone;
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
@@ -44,6 +47,11 @@
 // OPTIONS //
 @property (nonatomic) BOOL showPageControlWhenOnlyOnePage;
 @property (nonatomic) BOOL showPageControl;
+
+@property (nonatomic) BOOL enableDragAndDrop;
+@property (nonatomic) CGFloat minimumPressDurationToStartDragging;
+
+@property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
 //*********//
 
 @end

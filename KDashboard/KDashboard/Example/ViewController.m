@@ -10,9 +10,9 @@
 
 #import "CollectionViewCell.h"
 
-#define ROW_COUNT 7
-#define COLUMN_COUNT 8
-#define CELL_COUNT 122
+#define ROW_COUNT 4
+#define COLUMN_COUNT 4
+#define CELL_COUNT 100
 
 #define CELL_NAME @"Cell"
 
@@ -33,12 +33,8 @@
     
     self.view.backgroundColor = [UIColor yellowColor];
     
-    KDashboard* dashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*10/100, screenRect.size.width, screenRect.size.height*80/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME];
+    KDashboard* dashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*10/100, screenRect.size.width, screenRect.size.height*80/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
     dashboard.view.backgroundColor = [UIColor cyanColor];
-    
-    [self addChildViewController:dashboard];
-    [self.view addSubview:dashboard.view];
-    [dashboard didMoveToParentViewController:self];
 }
 
 -(NSUInteger)rowCountPerPageInDashboard:(KDashboard*)dashboard{

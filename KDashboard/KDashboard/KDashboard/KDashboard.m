@@ -10,12 +10,15 @@
 
 #define IS_IOS7 ([[[UIDevice currentDevice] systemVersion] floatValue] == 7.0)
 
-#define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 90
-#define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 7
+#define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 95
+#define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 6
+
+#define DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING 0.5
+#define DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION 0.8
 
 @interface KDashboard ()
 
-@property (nonatomic, weak) id superviewEmbedder;
+@property (nonatomic, weak) UIViewController* viewControllerEmbedder;
 @property (nonatomic, weak) UIView* deleteZone;
 @property (nonatomic, retain) UIView* draggedCell;
 
@@ -23,17 +26,23 @@
 @property (nonatomic, weak) CollectionViewEmbedderViewController* currentCollectionViewEmbedder;
 @property (nonatomic, retain) Class cellClass;
 @property (nonatomic, retain) NSString* identifier;
-@property (nonatomic, weak) UIView* leftSideSlidingDetectionZone;
-@property (nonatomic, weak) UIView* rightSideSlidingDetectionZone;
 @property (nonatomic, weak) UIPageControl* pageControl;
 @property (nonatomic) NSInteger pageIndex;
+
+@property (nonatomic, retain) UILongPressGestureRecognizer* longPressGesture;
+@property (nonatomic, retain) UIPanGestureRecognizer* panGesture;
+@property (nonatomic, retain) UICollectionViewCell* lastDraggedCellSource;
+
+@property (nonatomic, weak) UIView* leftSideSlidingDetectionZone;
+@property (nonatomic, weak) UIView* rightSideSlidingDetectionZone;
+@property (nonatomic, retain) NSTimer* slidingWhileDraggingTimer;
 
 @end
 
 @implementation KDashboard
 
 #pragma mark - initialisation
--(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(__unsafe_unretained Class)cellClass andReuseIdentifier:(NSString *)identifier{
+-(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(__unsafe_unretained Class)cellClass andReuseIdentifier:(NSString *)identifier andAssociateToThisViewController:(UIViewController *)viewController{
     if(self = [super init]){
         [self setDefaultOptions];
         
@@ -41,10 +50,12 @@
         _delegate = delegate;
         _cellClass = cellClass;
         _identifier = identifier;
+        _viewControllerEmbedder = viewController;
         
         [self.view setFrame:frame];
         
         [self layoutSubviews];
+        [self setUpGestures];
     }
     return self;
 }
@@ -52,6 +63,8 @@
 -(void) setDefaultOptions{
     _showPageControl = YES;
     _showPageControlWhenOnlyOnePage = YES;
+    _enableDragAndDrop = YES;
+    _slidingPageWhileDraggingWaitingDuration = DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION;
 }
 
 -(void) layoutSubviews{
@@ -69,6 +82,10 @@
         [self reloadNumberOfPages];
         _pageControl.currentPage = _pageIndex;
     }
+    
+    [_viewControllerEmbedder addChildViewController:self];
+    [_viewControllerEmbedder.view addSubview:self.view];
+    [self didMoveToParentViewController:_viewControllerEmbedder];
     
 }
 
@@ -205,14 +222,16 @@
 
 -(void) setPageIndex:(NSInteger)pageIndex{
     _pageIndex = pageIndex;
-    _pageControl.currentPage = pageIndex;
+    if(_pageControl != nil)_pageControl.currentPage = pageIndex;
 }
 
 -(void) reloadNumberOfPages{
-    _pageControl.numberOfPages = [self pageCount];
-    if(!_showPageControlWhenOnlyOnePage){
-        if(_pageControl.numberOfPages <= 1){
-            _pageControl.numberOfPages = 0;
+    if(_pageControl != nil){
+        _pageControl.numberOfPages = [self pageCount];
+        if(!_showPageControlWhenOnlyOnePage){
+            if(_pageControl.numberOfPages <= 1){
+                _pageControl.numberOfPages = 0;
+            }
         }
     }
 }
@@ -251,6 +270,115 @@
     return [_dataSource dashboard:self cellForItemAtIndex:indexPath.row+collectionViewEmbedder.pageIndex*([_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self])];
 }
 
+#pragma mark - gestures managing
+- (void)setUpGestures{
+    _longPressGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handlePress:)];
+    _longPressGesture.delegate = self;
+    _longPressGesture.numberOfTouchesRequired = 1;
+    _longPressGesture.minimumPressDuration = DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING;
+    [self.view addGestureRecognizer:_longPressGesture];
+    
+    _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    _panGesture.delegate = self;
+    [self.view addGestureRecognizer:_panGesture];
+}
+
+-(void)removeGestures{
+    if(_longPressGesture != nil){
+        if([self.view.gestureRecognizers containsObject:_longPressGesture])[self.view removeGestureRecognizer:_longPressGesture];
+        _longPressGesture = nil;
+    }
+}
+
+- (void)handlePress:(UILongPressGestureRecognizer *)gesture{
+    if(gesture.state == UIGestureRecognizerStateBegan){
+        if(_delegate != nil){
+            if([_delegate respondsToSelector:@selector(startDraggingFromDashboard:)]){
+                [_delegate startDraggingFromDashboard:self];
+            }
+        }
+        
+        UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
+        CGPoint point = [gesture locationInView:targetedCollectionView];
+        NSIndexPath *indexPath = [targetedCollectionView indexPathForItemAtPoint:point];
+        if (indexPath != nil) {
+            [self showDraggedCellWithSourceCell:[targetedCollectionView cellForItemAtIndexPath:indexPath] fromThisStartPoint:[gesture locationInView:_viewControllerEmbedder.view]];
+        }
+        
+    }else if(gesture.state == UIGestureRecognizerStateEnded){
+        if(_delegate != nil){
+            if([_delegate respondsToSelector:@selector(endDraggingFromDashboard:)]){
+                [_delegate endDraggingFromDashboard:self];
+            }
+        }
+        
+        [self hideDraggedCell];
+    }
+}
+
+- (void)handlePan:(UIPanGestureRecognizer *)gesture{
+    if(gesture.state == UIGestureRecognizerStateChanged && _draggedCell != nil){
+        CGPoint point = [gesture locationInView:_viewControllerEmbedder.view];
+        _draggedCell.center = point;
+        
+        if(CGRectContainsPoint([self.view convertRect:_leftSideSlidingDetectionZone.frame toView:_viewControllerEmbedder.view], point)){
+            if(_slidingWhileDraggingTimer == nil){
+                _slidingWhileDraggingTimer = [NSTimer scheduledTimerWithTimeInterval:_slidingPageWhileDraggingWaitingDuration
+                                                                 target:self
+                                                               selector:@selector(slideToThePreviousPage)
+                                                               userInfo:nil
+                                                                repeats:YES];
+            }
+        }else if(CGRectContainsPoint([self.view convertRect:_rightSideSlidingDetectionZone.frame toView:_viewControllerEmbedder.view], point)){
+            if(_slidingWhileDraggingTimer == nil){
+                _slidingWhileDraggingTimer = [NSTimer scheduledTimerWithTimeInterval:_slidingPageWhileDraggingWaitingDuration
+                                                                 target:self
+                                                               selector:@selector(slideToTheNextPage)
+                                                               userInfo:nil
+                                                                repeats:YES];
+            }
+        }else if(_slidingWhileDraggingTimer != nil){
+            [_slidingWhileDraggingTimer invalidate];
+            _slidingWhileDraggingTimer = nil;
+        }
+    }
+    
+    if(gesture.state == UIGestureRecognizerStateRecognized){
+        
+    }
+}
+
+-(void) showDraggedCellWithSourceCell:(UICollectionViewCell*)cell fromThisStartPoint:(CGPoint)startPoint{
+    _lastDraggedCellSource = cell;
+    
+    _draggedCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
+    for(UIView* subview in cell.subviews){
+        [_draggedCell addSubview:subview];
+    }
+    
+    _draggedCell.center = startPoint;
+    [_viewControllerEmbedder.view addSubview:_draggedCell];
+}
+
+-(void) hideDraggedCell{
+    for(UIView* subview in _draggedCell.subviews){
+        [_lastDraggedCellSource addSubview:subview];
+    }
+    [_draggedCell removeFromSuperview];
+}
+
+-(void) slideToThePreviousPage{
+    NSLog(@"slideToTheLeft");
+}
+
+-(void) slideToTheNextPage{
+    NSLog(@"slideToTheRight");
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return (gestureRecognizer == _longPressGesture && otherGestureRecognizer == _panGesture) || (gestureRecognizer == _panGesture && otherGestureRecognizer == _longPressGesture);
+}
+
 #pragma mark - associateADeleteZone: - associate a view from the superview where a dragged cell can be deleted
 -(void) associateADeleteZone:(UIView*)deleteZone{
     _deleteZone = deleteZone;
@@ -265,6 +393,30 @@
 -(void) setShowPageControl:(BOOL)showPageControl{
     _showPageControl = showPageControl;
     [self layoutSubviews];
+}
+
+-(void) setEnableDragAndDrop:(BOOL)enableDragAndDrop{
+    _enableDragAndDrop = enableDragAndDrop;
+    if(enableDragAndDrop){
+        if(_longPressGesture == nil){
+            [self setUpGestures];
+        }
+    }else{
+        [self removeGestures];
+    }
+}
+
+-(void) setMinimumPressDurationToStartDragging:(CGFloat)minimumPressDurationToStartDragging{
+    if(minimumPressDurationToStartDragging < 0) minimumPressDurationToStartDragging = 0;
+    _minimumPressDurationToStartDragging = minimumPressDurationToStartDragging;
+    if(_longPressGesture == nil){
+        [self setUpGestures];
+    }
+    _longPressGesture.minimumPressDuration = minimumPressDurationToStartDragging;
+}
+
+-(void) setSlidingPageWhileDraggingWaitingDuration:(CGFloat)slidingPageWhileDraggingWaitingDuration{
+    _slidingPageWhileDraggingWaitingDuration = slidingPageWhileDraggingWaitingDuration;
 }
 
 #pragma mark - registerClass:forCellWithReuseIdentifier: - used for the currentCollectionViewEmbedder
