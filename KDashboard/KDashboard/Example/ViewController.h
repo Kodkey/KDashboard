@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+#import "KDashboard.h"
+
+@interface ViewController : UIViewController <KDashboardDataSource, KDashboardDelegate>
 
 @end

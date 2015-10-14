@@ -16,6 +16,8 @@
 		4D6810501BCD51E4002D72E5 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68104F1BCD51E4002D72E5 /* ViewController.m */; };
 		4D6810531BCD52F8002D72E5 /* KDashboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810521BCD52F8002D72E5 /* KDashboard.m */; };
 		4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */; };
+		4D886FDC1BCE4AE500603800 /* CollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D886FDB1BCE4AE500603800 /* CollectionViewCell.m */; };
+		4D886FDE1BCE4DED00603800 /* imagecell.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D886FDD1BCE4DED00603800 /* imagecell.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +48,9 @@
 		4D6810521BCD52F8002D72E5 /* KDashboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KDashboard.m; sourceTree = "<group>"; };
 		4D6810541BCD5423002D72E5 /* CollectionViewEmbedderViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionViewEmbedderViewController.h; sourceTree = "<group>"; };
 		4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionViewEmbedderViewController.m; sourceTree = "<group>"; };
+		4D886FDA1BCE4AE500603800 /* CollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionViewCell.h; sourceTree = "<group>"; };
+		4D886FDB1BCE4AE500603800 /* CollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionViewCell.m; sourceTree = "<group>"; };
+		4D886FDD1BCE4DED00603800 /* imagecell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imagecell.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,10 +131,13 @@
 		4D6810491BCD5140002D72E5 /* Example */ = {
 			isa = PBXGroup;
 			children = (
+				4D886FDD1BCE4DED00603800 /* imagecell.png */,
 				4D68104B1BCD5185002D72E5 /* AppDelegate.h */,
 				4D68104C1BCD5185002D72E5 /* AppDelegate.m */,
 				4D68104E1BCD51E4002D72E5 /* ViewController.h */,
 				4D68104F1BCD51E4002D72E5 /* ViewController.m */,
+				4D886FDA1BCE4AE500603800 /* CollectionViewCell.h */,
+				4D886FDB1BCE4AE500603800 /* CollectionViewCell.m */,
 			);
 			path = Example;
 			sourceTree = "<group>";
@@ -228,6 +236,7 @@
 				4D68102F1BCD5089002D72E5 /* Main.storyboard in Resources */,
 				4D6810341BCD5089002D72E5 /* LaunchScreen.xib in Resources */,
 				4D6810311BCD5089002D72E5 /* Images.xcassets in Resources */,
+				4D886FDE1BCE4DED00603800 /* imagecell.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +254,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D886FDC1BCE4AE500603800 /* CollectionViewCell.m in Sources */,
 				4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */,
 				4D6810501BCD51E4002D72E5 /* ViewController.m in Sources */,
 				4D68104D1BCD5185002D72E5 /* AppDelegate.m in Sources */,
@@ -378,6 +388,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = KDashboard/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -388,6 +399,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = KDashboard/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -446,6 +458,7 @@
 				4D6810451BCD5089002D72E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4D6810461BCD5089002D72E5 /* Build configuration list for PBXNativeTarget "KDashboardTests" */ = {
 			isa = XCConfigurationList;
@@ -454,6 +467,7 @@
 				4D6810481BCD5089002D72E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

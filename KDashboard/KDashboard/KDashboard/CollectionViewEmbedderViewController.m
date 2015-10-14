@@ -10,33 +10,43 @@
 
 @interface CollectionViewEmbedderViewController ()
 
-@property (nonatomic, weak) UICollectionView* collectionView;
+@property (nonatomic) CGRect theFrame;
+
+@property (nonatomic, weak) Class cellClass;
+@property (nonatomic, weak) NSString* identifier;
 
 @end
 
 @implementation CollectionViewEmbedderViewController
 
 #pragma mark - initialisation
-- (id) init{
+- (id) initWithFrame:(CGRect)frame andDataSource:(id<CollectionViewEmbedderViewControllerDataSource>)dataSource andDelegate:(id<CollectionViewEmbedderViewControllerDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier{
     if(self = [super init]){
         
+        _dataSource = dataSource;
+        _delegate = delegate;
+        _cellClass = cellClass;
+        _identifier = identifier;
+        
+        _theFrame = frame;
+        self.view.frame = frame;
     }
     return self;
 }
 
-- (void)viewDidLoad {
+-(void) viewDidLoad{
     [super viewDidLoad];
     
-    _collectionView = [self createCollectionViewWithFrame:self.view.bounds];
+    _collectionView = [self createCollectionViewWithFrame:_theFrame];
 }
 
 #pragma mark - CollectionView configuration
 -(UICollectionView*) createCollectionViewWithFrame:(CGRect)frame{
     
     UICollectionViewFlowLayout* collectionViewFlowLayout = [[UICollectionViewFlowLayout alloc] init];
-    [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
+    [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
     
-    [collectionViewFlowLayout setItemSize:CGSizeMake(frame.size.width/[_dataSource numberOfColumnsPerPage], frame.size.height/[_dataSource numberOfRowsPerPage])];
+    [collectionViewFlowLayout setItemSize:CGSizeMake(frame.size.width/[_dataSource maxColumnCount], frame.size.height/[_dataSource maxRowCount])];
     [collectionViewFlowLayout setMinimumInteritemSpacing:0];
     [collectionViewFlowLayout setMinimumLineSpacing:0];
     
@@ -47,21 +57,27 @@
     aCollectionView.showsVerticalScrollIndicator = NO;
     aCollectionView.bounces = NO;
     
+    [aCollectionView registerClass:_cellClass forCellWithReuseIdentifier:_identifier];
+    
     aCollectionView.delegate = self;
     aCollectionView.dataSource = self;
-    
-    [aCollectionView registerClass:[_dataSource dashboardCellClass] forCellWithReuseIdentifier:[_dataSource cellReuseIdentifier]];
     
     return aCollectionView;
 }
 
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{
+    NSIndexPath* indexPath = [NSIndexPath indexPathForRow:index-_pageIndex*([_dataSource maxRowCount]*[_dataSource maxColumnCount]) inSection:0];
+    return [_collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:indexPath];
+    
+}
+
 #pragma mark - UICollectionViewDataSource
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
-    return [_dataSource numberOfColumnsPerPage]*[_dataSource numberOfRowsPerPage];
+    return [_dataSource numberOfItemsInThisCollectionViewEmbedderViewController:self];
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
-    return [_dataSource collectionView:collectionView cellForItemAtIndexPath:indexPath];
+    return [_dataSource collectionViewEmbedderViewController:self cellForItemAtIndexPath:indexPath];
 }
 
 #pragma mark - didReceiveMemoryWarning

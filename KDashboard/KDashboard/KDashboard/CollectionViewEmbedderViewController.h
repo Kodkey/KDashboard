@@ -8,15 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+@class CollectionViewEmbedderViewController;
 @protocol CollectionViewEmbedderViewControllerDataSource <NSObject>
 @required
--(NSInteger)numberOfRowsPerPage;
--(NSInteger)numberOfColumnsPerPage;
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath;
-
--(Class)dashboardCellClass;
--(NSString*)cellReuseIdentifier;
-
+-(NSUInteger)maxRowCount;
+-(NSUInteger)maxColumnCount;
+-(NSInteger)numberOfItemsInThisCollectionViewEmbedderViewController:(CollectionViewEmbedderViewController*)collectionViewEmbedderViewController;
+-(UICollectionViewCell *)collectionViewEmbedderViewController:(CollectionViewEmbedderViewController*)collectionViewEmbedder cellForItemAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
 @protocol CollectionViewEmbedderViewControllerDelegate <NSObject>
@@ -26,8 +24,13 @@
 
 @interface CollectionViewEmbedderViewController : UIViewController <UICollectionViewDataSource, UICollectionViewDelegate>
 
+@property (nonatomic, weak) UICollectionView* collectionView;
+@property (nonatomic) NSInteger pageIndex;
+
 @property (nonatomic, assign) id<CollectionViewEmbedderViewControllerDataSource> dataSource;
 @property (nonatomic, assign) id<CollectionViewEmbedderViewControllerDelegate> delegate;
 
+- (id) initWithFrame:(CGRect)frame andDataSource:(id<CollectionViewEmbedderViewControllerDataSource>)dataSource andDelegate:(id<CollectionViewEmbedderViewControllerDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier;
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
 
 @end

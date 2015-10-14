@@ -8,25 +8,42 @@
 
 #import <UIKit/UIKit.h>
 
+#import "CollectionViewEmbedderViewController.h"
+
+@class KDashboard;
 @protocol KDashboardDataSource <NSObject>
 @required
--(NSInteger)numberOfRowsPerPage;
--(NSInteger)numberOfColumnsPerPage;
+-(NSUInteger)rowCountPerPageInDashboard:(KDashboard*)dashboard;
+-(NSUInteger)columnCountPerPageInDashboard:(KDashboard*)dashboard;
+-(NSUInteger)cellCountInDashboard:(KDashboard*)dashboard;
+-(UICollectionViewCell*)dashboard:(KDashboard*)dashboard cellForItemAtIndex:(NSUInteger)index;
 @end
 
 @protocol KDashboardDelegate <NSObject>
 @optional
+-(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSUInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
+-(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSUInteger)index;
+-(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSUInteger)index;
 
+-(void)dashboard:(KDashboard*)dashboard createGroupAtIndex:(NSUInteger)index withCellAtIndex:(NSUInteger)sourceCell andCellAtIndex:(NSUInteger)destinationIndex;
+-(void)dashboard:(KDashboard*)dashboard addCellAtIndex:(NSUInteger)sourceIndex toGroupAtIndex:(NSUInteger)destinationIndex;
 @end
 
-@interface KDashboard : UIView <UIPageViewControllerDataSource, UIPageViewControllerDelegate>
+
+
+@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
 
--(id) initWithFrame:(CGRect)frame;
+-(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier;
 
 -(void) associateADeleteZone:(UIView*)deleteZone;
--(void) registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString*)identifier;
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
+
+// OPTIONS //
+@property (nonatomic) BOOL showPageControlWhenOnlyOnePage;
+@property (nonatomic) BOOL showPageControl;
+//*********//
 
 @end
