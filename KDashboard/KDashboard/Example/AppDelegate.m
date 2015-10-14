@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "ViewController.h"
 
 @interface AppDelegate ()
 
@@ -16,7 +17,16 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    
+    UINavigationController *navController  = [[UINavigationController alloc] initWithRootViewController:[[ViewController alloc] init]];
+    navController.navigationBar.hidden = YES;
+    if ([navController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        navController.interactivePopGestureRecognizer.enabled = NO;
+    }
+    self.window.rootViewController = navController;
+    
+    [self.window makeKeyAndVisible];
+    
     return YES;
 }
 

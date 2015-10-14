@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		4D6810261BCD5089002D72E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810251BCD5089002D72E5 /* main.m */; };
-		4D6810291BCD5089002D72E5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810281BCD5089002D72E5 /* AppDelegate.m */; };
-		4D68102C1BCD5089002D72E5 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68102B1BCD5089002D72E5 /* ViewController.m */; };
 		4D68102F1BCD5089002D72E5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D68102D1BCD5089002D72E5 /* Main.storyboard */; };
 		4D6810311BCD5089002D72E5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D6810301BCD5089002D72E5 /* Images.xcassets */; };
 		4D6810341BCD5089002D72E5 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4D6810321BCD5089002D72E5 /* LaunchScreen.xib */; };
 		4D6810401BCD5089002D72E5 /* KDashboardTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68103F1BCD5089002D72E5 /* KDashboardTests.m */; };
+		4D68104D1BCD5185002D72E5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68104C1BCD5185002D72E5 /* AppDelegate.m */; };
+		4D6810501BCD51E4002D72E5 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68104F1BCD51E4002D72E5 /* ViewController.m */; };
+		4D6810531BCD52F8002D72E5 /* KDashboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810521BCD52F8002D72E5 /* KDashboard.m */; };
+		4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,16 +32,20 @@
 		4D6810201BCD5089002D72E5 /* KDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D6810241BCD5089002D72E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4D6810251BCD5089002D72E5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		4D6810271BCD5089002D72E5 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		4D6810281BCD5089002D72E5 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		4D68102A1BCD5089002D72E5 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		4D68102B1BCD5089002D72E5 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		4D68102E1BCD5089002D72E5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		4D6810301BCD5089002D72E5 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		4D6810331BCD5089002D72E5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		4D6810391BCD5089002D72E5 /* KDashboardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KDashboardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D68103E1BCD5089002D72E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4D68103F1BCD5089002D72E5 /* KDashboardTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KDashboardTests.m; sourceTree = "<group>"; };
+		4D68104B1BCD5185002D72E5 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		4D68104C1BCD5185002D72E5 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		4D68104E1BCD51E4002D72E5 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		4D68104F1BCD51E4002D72E5 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		4D6810511BCD52F8002D72E5 /* KDashboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KDashboard.h; sourceTree = "<group>"; };
+		4D6810521BCD52F8002D72E5 /* KDashboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KDashboard.m; sourceTree = "<group>"; };
+		4D6810541BCD5423002D72E5 /* CollectionViewEmbedderViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionViewEmbedderViewController.h; sourceTree = "<group>"; };
+		4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionViewEmbedderViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,10 +87,8 @@
 		4D6810221BCD5089002D72E5 /* KDashboard */ = {
 			isa = PBXGroup;
 			children = (
-				4D6810271BCD5089002D72E5 /* AppDelegate.h */,
-				4D6810281BCD5089002D72E5 /* AppDelegate.m */,
-				4D68102A1BCD5089002D72E5 /* ViewController.h */,
-				4D68102B1BCD5089002D72E5 /* ViewController.m */,
+				4D6810491BCD5140002D72E5 /* Example */,
+				4D68104A1BCD5140002D72E5 /* KDashboard */,
 				4D68102D1BCD5089002D72E5 /* Main.storyboard */,
 				4D6810301BCD5089002D72E5 /* Images.xcassets */,
 				4D6810321BCD5089002D72E5 /* LaunchScreen.xib */,
@@ -117,6 +121,28 @@
 				4D68103E1BCD5089002D72E5 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		4D6810491BCD5140002D72E5 /* Example */ = {
+			isa = PBXGroup;
+			children = (
+				4D68104B1BCD5185002D72E5 /* AppDelegate.h */,
+				4D68104C1BCD5185002D72E5 /* AppDelegate.m */,
+				4D68104E1BCD51E4002D72E5 /* ViewController.h */,
+				4D68104F1BCD51E4002D72E5 /* ViewController.m */,
+			);
+			path = Example;
+			sourceTree = "<group>";
+		};
+		4D68104A1BCD5140002D72E5 /* KDashboard */ = {
+			isa = PBXGroup;
+			children = (
+				4D6810511BCD52F8002D72E5 /* KDashboard.h */,
+				4D6810521BCD52F8002D72E5 /* KDashboard.m */,
+				4D6810541BCD5423002D72E5 /* CollectionViewEmbedderViewController.h */,
+				4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */,
+			);
+			path = KDashboard;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -219,8 +245,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D68102C1BCD5089002D72E5 /* ViewController.m in Sources */,
-				4D6810291BCD5089002D72E5 /* AppDelegate.m in Sources */,
+				4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */,
+				4D6810501BCD51E4002D72E5 /* ViewController.m in Sources */,
+				4D68104D1BCD5185002D72E5 /* AppDelegate.m in Sources */,
+				4D6810531BCD52F8002D72E5 /* KDashboard.m in Sources */,
 				4D6810261BCD5089002D72E5 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
