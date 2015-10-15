@@ -16,6 +16,8 @@
 #define DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING 0.5
 #define DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION 0.8
 
+#define CANCEL_DRAGGING_ANIMATION_DURATION 0.25
+
 @interface KDashboard ()
 
 @property (nonatomic, weak) UIViewController* viewControllerEmbedder;
@@ -43,7 +45,9 @@
 
 @implementation KDashboard
 
-#pragma mark - initialisation
+/******************/
+/* INITIALISATION */
+/******************/
 -(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(__unsafe_unretained Class)cellClass andReuseIdentifier:(NSString *)identifier andAssociateToThisViewController:(UIViewController *)viewController{
     if(self = [super init]){
         [self setDefaultOptions];
@@ -54,12 +58,13 @@
         _identifier = identifier;
         _viewControllerEmbedder = viewController;
         
+        _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
+        
         [self.view setFrame:frame];
         
         [self layoutSubviews];
         [self setUpGestures];
         
-        _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
     }
     return self;
 }
@@ -106,7 +111,9 @@
     if(_pageControl != nil)[_pageControl removeFromSuperview];
 }
 
-#pragma mark - creating UI elements associated to the Dashboard
+/************************/
+/* UI ELEMENTS CREATION */
+/************************/
 -(UIPageViewController*) createPageViewControllerWithFrame:(CGRect)frame{
     UIPageViewController* aPageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
     aPageViewController.view.backgroundColor = [UIColor clearColor];
@@ -140,7 +147,9 @@
     return aPageControl;
 }
 
-#pragma mark - managing UI elements
+/************************/
+/* MANAGING UI ELEMENTS */
+/************************/
 -(void) loadInitialViewControllerAtIndex:(NSInteger)index withAnimation:(BOOL)animated andDirection:(NSInteger)direction andCompletionBlock:(void(^)(BOOL))completionBlock{
     CollectionViewEmbedderViewController* initialViewController = [self viewControllerAtIndex:index];
     _currentCollectionViewEmbedder = initialViewController;
@@ -247,7 +256,9 @@
     return [_currentCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
 }
 
-#pragma mark - CollectionViewEmbedderViewController dataSource methods
+/**********************/
+/* DATASOURCE METHODS */
+/**********************/
 -(NSUInteger)maxRowCount{
     return [_dataSource rowCountPerPageInDashboard:self];
 }
@@ -280,7 +291,9 @@
     return theCell;
 }
 
-#pragma mark - gestures managing
+/*********************/
+/* GESTURES MANAGING */
+/*********************/
 - (void)setUpGestures{
     _longPressGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handlePress:)];
     _longPressGesture.delegate = self;
@@ -312,11 +325,11 @@
         CGPoint point = [gesture locationInView:targetedCollectionView];
         NSIndexPath *indexPath = [targetedCollectionView indexPathForItemAtPoint:point];
         if (indexPath != nil) {
-            _indexOfTheLastDraggedCellSource = [self getIndexOfTheDraggedCellWithIndexPath:indexPath];
+            _indexOfTheLastDraggedCellSource = [self getDashboardIndexWithIndexPath:indexPath];
             [self showDraggedCellWithSourceCell:[targetedCollectionView cellForItemAtIndexPath:indexPath] fromThisStartPoint:[gesture locationInView:_viewControllerEmbedder.view]];
         }
         
-    }else if(gesture.state == UIGestureRecognizerStateEnded){
+    }else if(gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled || gesture.state == UIGestureRecognizerStateFailed){
         if(_delegate != nil){
             if([_delegate respondsToSelector:@selector(endDraggingFromDashboard:)]){
                 [_delegate endDraggingFromDashboard:self];
@@ -327,13 +340,15 @@
             [_slidingWhileDraggingTimer invalidate];
             _slidingWhileDraggingTimer = nil;
         }
-        
-        [self hideDraggedCell];
     }
 }
 
 - (void)handlePan:(UIPanGestureRecognizer *)gesture{
-    if(gesture.state == UIGestureRecognizerStateChanged && _draggedCell != nil){
+    if(_draggedCell == nil){
+        return;
+    }
+    
+    if(gesture.state == UIGestureRecognizerStateChanged){
         CGPoint point = [gesture locationInView:_viewControllerEmbedder.view];
         _draggedCell.center = point;
         
@@ -360,11 +375,19 @@
     }
     
     if(gesture.state == UIGestureRecognizerStateRecognized){
-        
+        CGPoint droppingPoint = [gesture locationInView:_currentCollectionViewEmbedder.collectionView];
+        NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
+        if(indexPath != nil){
+            [self swapCellAtIndex:_indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
+        }else{
+            [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        }
     }
 }
 
-#pragma mark - manage the dragged cell
+/*************************/
+/* DRAGGED CELL MANAGING */
+/*************************/
 -(void) showDraggedCellWithSourceCell:(UICollectionViewCell*)cell fromThisStartPoint:(CGPoint)startPoint{
     _draggedCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
     for(UIView* subview in cell.subviews){
@@ -376,11 +399,8 @@
     [_viewControllerEmbedder.view addSubview:_draggedCell];
 }
 
--(void) hideDraggedCell{
-    UICollectionViewCell* lastDraggedCellSource;
-    if([self pageOfThisIndex:_indexOfTheLastDraggedCellSource] == _pageIndex){
-        lastDraggedCellSource = [_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:_indexOfTheLastDraggedCellSource%_onePageElementCount inSection:0]];
-    }
+-(void) hideDraggedCellAndRestoreCellAtDashboardIndex:(NSInteger)index{
+    UICollectionViewCell* lastDraggedCellSource = [self getCellAtDashboardIndex:index];
     
     if(lastDraggedCellSource != nil){
         lastDraggedCellSource.hidden = NO;
@@ -393,6 +413,40 @@
     _indexOfTheLastDraggedCellSource = -1;
 }
 
+-(void) cancelDraggingAndGetDraggedCellBackToItsCellPosition{
+    [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:_indexOfTheLastDraggedCellSource];
+}
+
+-(void) cancelDraggingAndMoveDraggedCellToThisDashboardIndex:(NSInteger)index{
+    UICollectionViewCell* lastDraggedCellSource = [self getCellAtDashboardIndex:index];
+    
+    CGPoint originalCellPosition;
+    if(lastDraggedCellSource != nil){
+        originalCellPosition = lastDraggedCellSource.center;
+    }else{
+        if([self pageOfThisIndex:index] < _pageIndex){
+            originalCellPosition = CGPointMake(-_draggedCell.frame.size.width/2, self.view.frame.size.height/2);
+        }else{
+            originalCellPosition = CGPointMake(self.view.frame.size.width+_draggedCell.frame.size.width/2, self.view.frame.size.height/2);
+        }
+    }
+    
+    originalCellPosition = [self.view convertPoint:originalCellPosition toView:nil];
+    
+    [UIView animateWithDuration:CANCEL_DRAGGING_ANIMATION_DURATION
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         _draggedCell.center = originalCellPosition;
+                     }
+                     completion:^(BOOL finished){
+                         [self hideDraggedCellAndRestoreCellAtDashboardIndex:index];
+                     }];
+}
+
+/**************************/
+/* SLIDING PAGES MANAGING */
+/**************************/
 -(void) slideToThePreviousPage{
     if(_pageIndex <= 0){
         if(_slidingWhileDraggingTimer != nil){
@@ -415,12 +469,35 @@
     }
 }
 
-#pragma mark - UIGestureRecognizer Delegate
+/*************************/
+/* DROPPED CELL MANAGING */
+/*************************/
+-(void)swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSInteger)destinationIndex{
+    UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
+    
+    NSIndexPath* sourceIndexPath = [NSIndexPath indexPathForRow:sourceIndex inSection:0];
+    NSIndexPath* destinationIndexPath = [NSIndexPath indexPathForRow:destinationIndex inSection:0];
+    
+    [targetedCollectionView performBatchUpdates:^{
+        [targetedCollectionView moveItemAtIndexPath:sourceIndexPath toIndexPath:destinationIndexPath];
+        [targetedCollectionView moveItemAtIndexPath:destinationIndexPath toIndexPath:sourceIndexPath];
+    }completion:^(BOOL finished){
+        
+    }];
+    
+    [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+}
+
+/********************/
+/* GESTURE DELEGATE */
+/********************/
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
     return (gestureRecognizer == _longPressGesture && otherGestureRecognizer == _panGesture) || (gestureRecognizer == _panGesture && otherGestureRecognizer == _longPressGesture);
 }
 
-#pragma mark - Helping methods to manage indexes
+/********************/
+/* INDEXES MANAGING */
+/********************/
 -(NSUInteger) pageCount{
     return ceil((float)[_dataSource cellCountInDashboard:self]/(float)_onePageElementCount);
 }
@@ -429,16 +506,32 @@
     return index/_onePageElementCount;
 }
 
--(NSInteger) getIndexOfTheDraggedCellWithIndexPath:(NSIndexPath*)indexPath{
+-(NSInteger) getDashboardIndexWithIndexPath:(NSIndexPath*)indexPath{
     return indexPath.row+_pageIndex*_onePageElementCount;
 }
 
-#pragma mark - associateADeleteZone: - associate a view from the superview where a dragged cell can be deleted
+-(UICollectionViewCell*)getLastDraggedCellSource{
+    return [self getCellAtDashboardIndex:_indexOfTheLastDraggedCellSource];
+}
+
+-(UICollectionViewCell*)getCellAtDashboardIndex:(NSInteger)index{
+    if([self pageOfThisIndex:index] == _pageIndex){
+        return [_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:index%_onePageElementCount inSection:0]];
+    }
+    
+    return nil;
+}
+
+/***************************/
+/* DELETE ZONE ASSOCIATION */
+/***************************/
 -(void) associateADeleteZone:(UIView*)deleteZone{
     _deleteZone = deleteZone;
 }
 
-#pragma mark - options methods
+/*******************/
+/* OPTIONS METHODS */
+/*******************/
 -(void) setShowPageControlWhenOnlyOnePage:(BOOL)showPageControlWhenOnlyOnePage{
     _showPageControlWhenOnlyOnePage = showPageControlWhenOnlyOnePage;
     [self reloadNumberOfPages];
@@ -471,12 +564,6 @@
 
 -(void) setSlidingPageWhileDraggingWaitingDuration:(CGFloat)slidingPageWhileDraggingWaitingDuration{
     _slidingPageWhileDraggingWaitingDuration = slidingPageWhileDraggingWaitingDuration;
-}
-
-#pragma mark - registerClass:forCellWithReuseIdentifier: - used for the currentCollectionViewEmbedder
--(void) registerClass:(Class)cellClass forCellWithReuseIdentifier:(NSString*)identifier{
-    _cellClass = cellClass;
-    _identifier = identifier;
 }
 
 @end

@@ -24,14 +24,14 @@
 -(void)startDraggingFromDashboard:(KDashboard*)dashboard;
 -(void)endDraggingFromDashboard:(KDashboard*)dashboard;
 
--(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSUInteger)index;
+-(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index;
 
--(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSUInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
--(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSUInteger)index;
--(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSUInteger)index;
+-(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
+-(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSInteger)index;
+-(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index;
 
--(void)dashboard:(KDashboard*)dashboard createGroupAtIndex:(NSUInteger)index withCellAtIndex:(NSUInteger)sourceCell andCellAtIndex:(NSUInteger)destinationIndex;
--(void)dashboard:(KDashboard*)dashboard addCellAtIndex:(NSUInteger)sourceIndex toGroupAtIndex:(NSUInteger)destinationIndex;
+-(void)dashboard:(KDashboard*)dashboard createGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceCell andCellAtIndex:(NSInteger)destinationIndex;
+-(void)dashboard:(KDashboard*)dashboard addCellAtIndex:(NSInteger)sourceIndex toGroupAtIndex:(NSInteger)destinationIndex;
 @end
 
 
