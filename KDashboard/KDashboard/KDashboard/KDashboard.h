@@ -24,6 +24,8 @@
 -(void)startDraggingFromDashboard:(KDashboard*)dashboard;
 -(void)endDraggingFromDashboard:(KDashboard*)dashboard;
 
+-(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSUInteger)index;
+
 -(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSUInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
 -(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSUInteger)index;
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSUInteger)index;

@@ -29,9 +29,11 @@
 @property (nonatomic, weak) UIPageControl* pageControl;
 @property (nonatomic) NSInteger pageIndex;
 
+@property (nonatomic) NSUInteger onePageElementCount;
+
 @property (nonatomic, retain) UILongPressGestureRecognizer* longPressGesture;
 @property (nonatomic, retain) UIPanGestureRecognizer* panGesture;
-@property (nonatomic, retain) UICollectionViewCell* lastDraggedCellSource;
+@property (nonatomic) NSInteger indexOfTheLastDraggedCellSource;
 
 @property (nonatomic, weak) UIView* leftSideSlidingDetectionZone;
 @property (nonatomic, weak) UIView* rightSideSlidingDetectionZone;
@@ -56,11 +58,15 @@
         
         [self layoutSubviews];
         [self setUpGestures];
+        
+        _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
     }
     return self;
 }
 
 -(void) setDefaultOptions{
+    _indexOfTheLastDraggedCellSource = -1;
+    
     _showPageControl = YES;
     _showPageControlWhenOnlyOnePage = YES;
     _enableDragAndDrop = YES;
@@ -236,12 +242,9 @@
     }
 }
 
+#pragma mark - dequeueReusableCellWithIdentifier:forIndex:
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{
     return [_currentCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
-}
-
--(NSUInteger) pageCount{
-    return ceil((float)[_dataSource cellCountInDashboard:self]/(float)([_dataSource columnCountPerPageInDashboard:self]*[_dataSource rowCountPerPageInDashboard:self]));
 }
 
 #pragma mark - CollectionViewEmbedderViewController dataSource methods
@@ -257,17 +260,24 @@
     NSInteger numberOfItems;
     
     if(collectionViewEmbedderViewController.pageIndex == [self pageCount]-1){
-        numberOfItems = [_dataSource cellCountInDashboard:self]%([_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self]);
+        numberOfItems = [_dataSource cellCountInDashboard:self]%_onePageElementCount;
     }else{
-        numberOfItems = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
+        numberOfItems = _onePageElementCount;
     }
     
     return numberOfItems;
 }
 
 -(UICollectionViewCell *)collectionViewEmbedderViewController:(CollectionViewEmbedderViewController*)collectionViewEmbedder cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
     _currentCollectionViewEmbedder = collectionViewEmbedder;
-    return [_dataSource dashboard:self cellForItemAtIndex:indexPath.row+collectionViewEmbedder.pageIndex*([_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self])];
+    [self setPageIndex:_currentCollectionViewEmbedder.pageIndex];
+    
+    UICollectionViewCell* theCell = [_dataSource dashboard:self cellForItemAtIndex:indexPath.row+collectionViewEmbedder.pageIndex*_onePageElementCount];
+    
+    theCell.hidden = _pageIndex == [self pageOfThisIndex:_indexOfTheLastDraggedCellSource] && _indexOfTheLastDraggedCellSource%_onePageElementCount == indexPath.row;
+    
+    return theCell;
 }
 
 #pragma mark - gestures managing
@@ -302,6 +312,7 @@
         CGPoint point = [gesture locationInView:targetedCollectionView];
         NSIndexPath *indexPath = [targetedCollectionView indexPathForItemAtPoint:point];
         if (indexPath != nil) {
+            _indexOfTheLastDraggedCellSource = [self getIndexOfTheDraggedCellWithIndexPath:indexPath];
             [self showDraggedCellWithSourceCell:[targetedCollectionView cellForItemAtIndexPath:indexPath] fromThisStartPoint:[gesture locationInView:_viewControllerEmbedder.view]];
         }
         
@@ -310,6 +321,11 @@
             if([_delegate respondsToSelector:@selector(endDraggingFromDashboard:)]){
                 [_delegate endDraggingFromDashboard:self];
             }
+        }
+        
+        if(_slidingWhileDraggingTimer != nil){
+            [_slidingWhileDraggingTimer invalidate];
+            _slidingWhileDraggingTimer = nil;
         }
         
         [self hideDraggedCell];
@@ -348,35 +364,73 @@
     }
 }
 
+#pragma mark - manage the dragged cell
 -(void) showDraggedCellWithSourceCell:(UICollectionViewCell*)cell fromThisStartPoint:(CGPoint)startPoint{
-    _lastDraggedCellSource = cell;
-    
     _draggedCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
     for(UIView* subview in cell.subviews){
         [_draggedCell addSubview:subview];
     }
+    cell.hidden = YES;
     
     _draggedCell.center = startPoint;
     [_viewControllerEmbedder.view addSubview:_draggedCell];
 }
 
 -(void) hideDraggedCell{
-    for(UIView* subview in _draggedCell.subviews){
-        [_lastDraggedCellSource addSubview:subview];
+    UICollectionViewCell* lastDraggedCellSource;
+    if([self pageOfThisIndex:_indexOfTheLastDraggedCellSource] == _pageIndex){
+        lastDraggedCellSource = [_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:_indexOfTheLastDraggedCellSource%_onePageElementCount inSection:0]];
+    }
+    
+    if(lastDraggedCellSource != nil){
+        lastDraggedCellSource.hidden = NO;
+        for(UIView* subview in _draggedCell.subviews){
+            [lastDraggedCellSource addSubview:subview];
+        }
     }
     [_draggedCell removeFromSuperview];
+    
+    _indexOfTheLastDraggedCellSource = -1;
 }
 
 -(void) slideToThePreviousPage{
-    NSLog(@"slideToTheLeft");
+    if(_pageIndex <= 0){
+        if(_slidingWhileDraggingTimer != nil){
+            [_slidingWhileDraggingTimer invalidate];
+            _slidingWhileDraggingTimer = nil;
+        }
+    }else{
+        [self pageViewController:_pageViewController switchToThisViewController:(CollectionViewEmbedderViewController*)[self pageViewController:_pageViewController viewControllerBeforeViewController:_currentCollectionViewEmbedder] withDirection:UIPageViewControllerNavigationDirectionReverse];
+    }
 }
 
 -(void) slideToTheNextPage{
-    NSLog(@"slideToTheRight");
+    if(_pageIndex >= [self pageCount]-1){
+        if(_slidingWhileDraggingTimer != nil){
+            [_slidingWhileDraggingTimer invalidate];
+            _slidingWhileDraggingTimer = nil;
+        }
+    }else{
+       [self pageViewController:_pageViewController switchToThisViewController:(CollectionViewEmbedderViewController*)[self pageViewController:_pageViewController viewControllerAfterViewController:_currentCollectionViewEmbedder] withDirection:UIPageViewControllerNavigationDirectionForward];
+    }
 }
 
+#pragma mark - UIGestureRecognizer Delegate
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
     return (gestureRecognizer == _longPressGesture && otherGestureRecognizer == _panGesture) || (gestureRecognizer == _panGesture && otherGestureRecognizer == _longPressGesture);
+}
+
+#pragma mark - Helping methods to manage indexes
+-(NSUInteger) pageCount{
+    return ceil((float)[_dataSource cellCountInDashboard:self]/(float)_onePageElementCount);
+}
+
+-(NSUInteger) pageOfThisIndex:(NSInteger)index{
+    return index/_onePageElementCount;
+}
+
+-(NSInteger) getIndexOfTheDraggedCellWithIndexPath:(NSIndexPath*)indexPath{
+    return indexPath.row+_pageIndex*_onePageElementCount;
 }
 
 #pragma mark - associateADeleteZone: - associate a view from the superview where a dragged cell can be deleted
