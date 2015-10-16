@@ -19,7 +19,7 @@
 
 @protocol CollectionViewEmbedderViewControllerDelegate <NSObject>
 @optional
-
+- (void)collectionViewEmbedder:(CollectionViewEmbedderViewController *)collectionViewEmbedder didSelectItemAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
 @interface CollectionViewEmbedderViewController : UIViewController <UICollectionViewDataSource, UICollectionViewDelegate>

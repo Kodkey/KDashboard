@@ -16,13 +16,14 @@
 #define DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING 0.5
 #define DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION 0.8
 
-#define CANCEL_DRAGGING_ANIMATION_DURATION 0.25
+#define CANCEL_DRAGGING_ANIMATION_DURATION 0.35
 
 @interface KDashboard ()
 
 @property (nonatomic, weak) UIViewController* viewControllerEmbedder;
 @property (nonatomic, weak) UIView* deleteZone;
 @property (nonatomic, retain) UIView* draggedCell;
+@property (nonatomic, retain) UIView* bufferMovingCell;
 
 @property (nonatomic, weak) UIPageViewController* pageViewController;
 @property (nonatomic, weak) CollectionViewEmbedderViewController* currentCollectionViewEmbedder;
@@ -36,6 +37,8 @@
 @property (nonatomic, retain) UILongPressGestureRecognizer* longPressGesture;
 @property (nonatomic, retain) UIPanGestureRecognizer* panGesture;
 @property (nonatomic) NSInteger indexOfTheLastDraggedCellSource;
+@property (nonatomic) BOOL movedDraggedCell;
+@property (nonatomic) CGPoint memorizedDraggedCellSourceCenter;
 
 @property (nonatomic, weak) UIView* leftSideSlidingDetectionZone;
 @property (nonatomic, weak) UIView* rightSideSlidingDetectionZone;
@@ -71,6 +74,7 @@
 
 -(void) setDefaultOptions{
     _indexOfTheLastDraggedCellSource = -1;
+    _movedDraggedCell = NO;
     
     _showPageControl = YES;
     _showPageControlWhenOnlyOnePage = YES;
@@ -256,9 +260,9 @@
     return [_currentCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
 }
 
-/**********************/
-/* DATASOURCE METHODS */
-/**********************/
+/***********************************************/
+/* COLLECTION VIEW EMBEDDER DATASOURCE METHODS */
+/***********************************************/
 -(NSUInteger)maxRowCount{
     return [_dataSource rowCountPerPageInDashboard:self];
 }
@@ -289,6 +293,17 @@
     theCell.hidden = _pageIndex == [self pageOfThisIndex:_indexOfTheLastDraggedCellSource] && _indexOfTheLastDraggedCellSource%_onePageElementCount == indexPath.row;
     
     return theCell;
+}
+
+/*********************************************/
+/* COLLECTION VIEW EMBEDDER DELEGATE METHODS */
+/*********************************************/
+- (void)collectionViewEmbedder:(CollectionViewEmbedderViewController *)collectionViewEmbedder didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:userTappedOnACellAtThisIndex:)]){
+            [_delegate dashboard:self userTappedOnACellAtThisIndex:indexPath.row+collectionViewEmbedder.pageIndex*_onePageElementCount];
+        }
+    }
 }
 
 /*********************/
@@ -330,6 +345,12 @@
         }
         
     }else if(gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled || gesture.state == UIGestureRecognizerStateFailed){
+        if(!_movedDraggedCell){
+            [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        }else{
+            _movedDraggedCell = NO;
+        }
+        
         if(_delegate != nil){
             if([_delegate respondsToSelector:@selector(endDraggingFromDashboard:)]){
                 [_delegate endDraggingFromDashboard:self];
@@ -349,6 +370,7 @@
     }
     
     if(gesture.state == UIGestureRecognizerStateChanged){
+        _movedDraggedCell = YES;
         CGPoint point = [gesture locationInView:_viewControllerEmbedder.view];
         _draggedCell.center = point;
         
@@ -377,7 +399,7 @@
     if(gesture.state == UIGestureRecognizerStateRecognized){
         CGPoint droppingPoint = [gesture locationInView:_currentCollectionViewEmbedder.collectionView];
         NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
-        if(indexPath != nil){
+        if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath]){
             [self swapCellAtIndex:_indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
         }else{
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
@@ -389,6 +411,7 @@
 /* DRAGGED CELL MANAGING */
 /*************************/
 -(void) showDraggedCellWithSourceCell:(UICollectionViewCell*)cell fromThisStartPoint:(CGPoint)startPoint{
+    _memorizedDraggedCellSourceCenter = cell.center;
     _draggedCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
     for(UIView* subview in cell.subviews){
         [_draggedCell addSubview:subview];
@@ -397,6 +420,37 @@
     
     _draggedCell.center = startPoint;
     [_viewControllerEmbedder.view addSubview:_draggedCell];
+}
+
+-(void) moveCellWithCellSource:(UICollectionViewCell*)cell toPreviousOrNextPage:(BOOL)previous{
+    _bufferMovingCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
+    for(UIView* subview in cell.subviews){
+        [_bufferMovingCell addSubview:subview];
+    }
+    cell.hidden = YES;
+    
+    _bufferMovingCell.center = [self.view convertPoint:cell.center toView:nil];
+    [_viewControllerEmbedder.view addSubview:_bufferMovingCell];
+    
+    CGPoint cellDestinationPoint;
+    if(previous){
+        cellDestinationPoint = CGPointMake(_memorizedDraggedCellSourceCenter.x-self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
+    }else{
+        cellDestinationPoint = CGPointMake(_memorizedDraggedCellSourceCenter.x+self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
+    }
+    
+    cellDestinationPoint = [self.view convertPoint:cellDestinationPoint toView:nil];
+    
+    [UIView animateWithDuration:CANCEL_DRAGGING_ANIMATION_DURATION
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         _bufferMovingCell.center = cellDestinationPoint;
+                     }
+                     completion:^(BOOL finished){
+                         [_bufferMovingCell removeFromSuperview];
+                         _bufferMovingCell = nil;
+                     }];
 }
 
 -(void) hideDraggedCellAndRestoreCellAtDashboardIndex:(NSInteger)index{
@@ -425,9 +479,9 @@
         originalCellPosition = lastDraggedCellSource.center;
     }else{
         if([self pageOfThisIndex:index] < _pageIndex){
-            originalCellPosition = CGPointMake(-_draggedCell.frame.size.width/2, self.view.frame.size.height/2);
+            originalCellPosition = CGPointMake(_memorizedDraggedCellSourceCenter.x-self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
         }else{
-            originalCellPosition = CGPointMake(self.view.frame.size.width+_draggedCell.frame.size.width/2, self.view.frame.size.height/2);
+            originalCellPosition = CGPointMake(_memorizedDraggedCellSourceCenter.x+self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
         }
     }
     
@@ -475,17 +529,30 @@
 -(void)swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSInteger)destinationIndex{
     UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
     
-    NSIndexPath* sourceIndexPath = [NSIndexPath indexPathForRow:sourceIndex inSection:0];
-    NSIndexPath* destinationIndexPath = [NSIndexPath indexPathForRow:destinationIndex inSection:0];
+    NSIndexPath* sourceIndexPath = [NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0];
+    NSIndexPath* destinationIndexPath = [NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0];
     
-    [targetedCollectionView performBatchUpdates:^{
-        [targetedCollectionView moveItemAtIndexPath:sourceIndexPath toIndexPath:destinationIndexPath];
-        [targetedCollectionView moveItemAtIndexPath:destinationIndexPath toIndexPath:sourceIndexPath];
-    }completion:^(BOOL finished){
-        
-    }];
+    NSInteger pageIndexOfSourceCell = [self pageOfThisIndex:sourceIndex];
+    NSInteger pageIndexOfDestinationCell = [self pageOfThisIndex:destinationIndex];
+    
+    if(pageIndexOfSourceCell == pageIndexOfDestinationCell){
+        [targetedCollectionView performBatchUpdates:^{
+            [targetedCollectionView moveItemAtIndexPath:sourceIndexPath toIndexPath:destinationIndexPath];
+            [targetedCollectionView moveItemAtIndexPath:destinationIndexPath toIndexPath:sourceIndexPath];
+        }completion:^(BOOL finished){
+            
+        }];
+    }else{
+        [self moveCellWithCellSource:[_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:destinationIndexPath] toPreviousOrNextPage:(pageIndexOfSourceCell < pageIndexOfDestinationCell)];
+    }
     
     [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+    
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:swapCellAtIndex:withCellAtIndex:)]){
+            [_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex];
+        }
+    }
 }
 
 /********************/

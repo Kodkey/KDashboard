@@ -80,6 +80,15 @@
     return [_dataSource collectionViewEmbedderViewController:self cellForItemAtIndexPath:indexPath];
 }
 
+#pragma mark - UICollectionViewDelegate
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(collectionViewEmbedder:didSelectItemAtIndexPath:)]){
+            [_delegate collectionViewEmbedder:self didSelectItemAtIndexPath:indexPath];
+        }
+    }
+}
+
 #pragma mark - didReceiveMemoryWarning
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
