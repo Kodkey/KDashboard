@@ -27,6 +27,7 @@
 
 @property (nonatomic, weak) UIPageViewController* pageViewController;
 @property (nonatomic, weak) CollectionViewEmbedderViewController* currentCollectionViewEmbedder;
+@property (nonatomic, weak) CollectionViewEmbedderViewController* lastWorkingOnCollectionViewEmbedder;
 @property (nonatomic, retain) Class cellClass;
 @property (nonatomic, retain) NSString* identifier;
 @property (nonatomic, weak) UIPageControl* pageControl;
@@ -80,6 +81,8 @@
     _showPageControlWhenOnlyOnePage = YES;
     _enableDragAndDrop = YES;
     _slidingPageWhileDraggingWaitingDuration = DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION;
+    _enableSwappingAction = YES;
+    _enableInsertingAction = YES;
 }
 
 -(void) layoutSubviews{
@@ -143,7 +146,7 @@
 
 -(UIPageControl*) createPageControlWithFrame:(CGRect)frame{
     UIPageControl* aPageControl = [[UIPageControl alloc] initWithFrame:frame];
-    aPageControl.backgroundColor = [UIColor redColor];
+    aPageControl.backgroundColor = [UIColor orangeColor];
     aPageControl.enabled = NO;
     
     [self.view addSubview:aPageControl];
@@ -189,6 +192,7 @@
 - (void)pageViewController:(UIPageViewController *)pageViewController didFinishAnimating:(BOOL)finished previousViewControllers:(NSArray *)previousViewControllers transitionCompleted:(BOOL)completed{
     _currentCollectionViewEmbedder = [pageViewController.viewControllers lastObject];
     [self setPageIndex:_currentCollectionViewEmbedder.pageIndex];
+    NSLog(@"(didFinishAnimating) _currentCollectionViewEmbedder %@ pageIndex %d",_currentCollectionViewEmbedder,_currentCollectionViewEmbedder.pageIndex);
 }
 
 - (CollectionViewEmbedderViewController*)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(CollectionViewEmbedderViewController*)viewController {
@@ -236,7 +240,6 @@
                                    }];
     _currentCollectionViewEmbedder = [pageViewController.viewControllers lastObject];
     [self setPageIndex:_currentCollectionViewEmbedder.pageIndex];
-    
 }
 
 -(void) setPageIndex:(NSInteger)pageIndex{
@@ -257,7 +260,7 @@
 
 #pragma mark - dequeueReusableCellWithIdentifier:forIndex:
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{
-    return [_currentCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
+    return [_lastWorkingOnCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
 }
 
 /***********************************************/
@@ -285,12 +288,11 @@
 
 -(UICollectionViewCell *)collectionViewEmbedderViewController:(CollectionViewEmbedderViewController*)collectionViewEmbedder cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    _currentCollectionViewEmbedder = collectionViewEmbedder;
-    [self setPageIndex:_currentCollectionViewEmbedder.pageIndex];
+    _lastWorkingOnCollectionViewEmbedder = collectionViewEmbedder;
     
     UICollectionViewCell* theCell = [_dataSource dashboard:self cellForItemAtIndex:indexPath.row+collectionViewEmbedder.pageIndex*_onePageElementCount];
     
-    theCell.hidden = _pageIndex == [self pageOfThisIndex:_indexOfTheLastDraggedCellSource] && _indexOfTheLastDraggedCellSource%_onePageElementCount == indexPath.row;
+    theCell.hidden = collectionViewEmbedder.pageIndex == [self pageOfThisIndex:_indexOfTheLastDraggedCellSource] && _indexOfTheLastDraggedCellSource%_onePageElementCount == indexPath.row;
     
     return theCell;
 }
@@ -463,6 +465,7 @@
         }
     }
     [_draggedCell removeFromSuperview];
+    _draggedCell = nil;
     
     _indexOfTheLastDraggedCellSource = -1;
 }
@@ -631,6 +634,14 @@
 
 -(void) setSlidingPageWhileDraggingWaitingDuration:(CGFloat)slidingPageWhileDraggingWaitingDuration{
     _slidingPageWhileDraggingWaitingDuration = slidingPageWhileDraggingWaitingDuration;
+}
+
+-(void) setEnableSwappingAction:(BOOL)enableSwappingAction{
+    _enableSwappingAction = enableSwappingAction;
+}
+
+-(void) setEnableInsertingAction:(BOOL)enableInsertingAction{
+    _enableInsertingAction = enableInsertingAction;
 }
 
 @end

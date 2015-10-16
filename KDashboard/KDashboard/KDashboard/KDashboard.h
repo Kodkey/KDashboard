@@ -36,7 +36,7 @@
 
 
 
-@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate, UIGestureRecognizerDelegate>
+@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIScrollViewDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate, UIGestureRecognizerDelegate>
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
@@ -52,8 +52,9 @@
 
 @property (nonatomic) BOOL enableDragAndDrop;
 @property (nonatomic) CGFloat minimumPressDurationToStartDragging;
-
 @property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
+@property (nonatomic) BOOL enableSwappingAction;
+@property (nonatomic) BOOL enableInsertingAction;
 //*********//
 
 @end
