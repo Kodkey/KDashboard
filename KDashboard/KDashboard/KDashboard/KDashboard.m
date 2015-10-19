@@ -12,6 +12,7 @@
 
 #define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 95
 #define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 6
+#define ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE 20
 
 #define DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING 0.5
 #define DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION 0.8
@@ -67,7 +68,7 @@
         [self.view setFrame:frame];
         
         [self layoutSubviews];
-        [self setUpGestures];
+        if(_enableDragAndDrop)[self setUpGestures];
         
     }
     return self;
@@ -80,9 +81,10 @@
     _showPageControl = YES;
     _showPageControlWhenOnlyOnePage = YES;
     _enableDragAndDrop = YES;
-    _slidingPageWhileDraggingWaitingDuration = DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION;
     _enableSwappingAction = YES;
     _enableInsertingAction = YES;
+    
+    _slidingPageWhileDraggingWaitingDuration = DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION;
 }
 
 -(void) layoutSubviews{
@@ -192,7 +194,6 @@
 - (void)pageViewController:(UIPageViewController *)pageViewController didFinishAnimating:(BOOL)finished previousViewControllers:(NSArray *)previousViewControllers transitionCompleted:(BOOL)completed{
     _currentCollectionViewEmbedder = [pageViewController.viewControllers lastObject];
     [self setPageIndex:_currentCollectionViewEmbedder.pageIndex];
-    NSLog(@"(didFinishAnimating) _currentCollectionViewEmbedder %@ pageIndex %d",_currentCollectionViewEmbedder,_currentCollectionViewEmbedder.pageIndex);
 }
 
 - (CollectionViewEmbedderViewController*)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(CollectionViewEmbedderViewController*)viewController {
@@ -401,8 +402,20 @@
     if(gesture.state == UIGestureRecognizerStateRecognized){
         CGPoint droppingPoint = [gesture locationInView:_currentCollectionViewEmbedder.collectionView];
         NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
+        UICollectionViewCell* targetedCell = [self getCellAtDashboardIndex:[self getDashboardIndexWithIndexPath:indexPath]];
+        
         if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath]){
-            [self swapCellAtIndex:_indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
+            BOOL insertLeft = [self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint];
+            BOOL insertRight = [self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint];
+            
+            if(_enableInsertingAction && (insertLeft||insertRight)){
+                [self insertCellFromIndex:_indexOfTheLastDraggedCellSource toIndex:[self getDashboardIndexWithIndexPath:indexPath]+(int)insertRight];
+            }else if(_enableSwappingAction){
+                [self swapCellAtIndex:_indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
+            }else{
+                [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+            }
+            
         }else{
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
         }
@@ -530,6 +543,11 @@
 /* DROPPED CELL MANAGING */
 /*************************/
 -(void)swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSInteger)destinationIndex{
+    if(sourceIndex == destinationIndex){
+        [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        return;
+    }
+    
     UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
     
     NSIndexPath* sourceIndexPath = [NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0];
@@ -554,6 +572,71 @@
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:swapCellAtIndex:withCellAtIndex:)]){
             [_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex];
+        }
+    }
+}
+
+-(BOOL) isInsertingToTheLeftOfThisCell:(UICollectionViewCell*)cell atThisPoint:(CGPoint)droppingPoint{
+    CGFloat asideCellInsertingZoneWidthPercentage = _enableSwappingAction ? ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE : 50;
+    
+    CGRect cellFrame = cell.frame;
+    cellFrame.size.width = cellFrame.size.width*asideCellInsertingZoneWidthPercentage/100;
+    
+    return CGRectContainsPoint(cellFrame, droppingPoint);
+}
+
+-(BOOL) isInsertingToTheRightOfThisCell:(UICollectionViewCell*)cell atThisPoint:(CGPoint)droppingPoint{
+    CGFloat asideCellInsertingZoneWidthPercentage = _enableSwappingAction ? ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE : 50;
+    
+    CGRect cellFrame = cell.frame;
+    cellFrame.origin.x += cellFrame.size.width*(100-asideCellInsertingZoneWidthPercentage)/100;
+    cellFrame.size.width = cellFrame.size.width*asideCellInsertingZoneWidthPercentage/100;
+    
+    return CGRectContainsPoint(cellFrame, droppingPoint);
+}
+
+-(void)insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex{
+    if(sourceIndex == destinationIndex){
+        [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        return;
+    }
+    
+    UICollectionView* currentCollectionView = _currentCollectionViewEmbedder.collectionView;
+    
+    if(sourceIndex < destinationIndex){
+        if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
+            //TODO
+        }else{
+            destinationIndex--;
+            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+            [currentCollectionView performBatchUpdates:^{
+                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
+                for(int i=sourceIndex%_onePageElementCount+1;i<destinationIndex%_onePageElementCount;i++){
+                    [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] toIndexPath:[NSIndexPath indexPathForRow:i-1 inSection:0]];
+                }
+            }completion:^(BOOL finished){
+                
+            }];
+        }
+    }else{
+        if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
+            //TODO
+        }else{
+            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+            [currentCollectionView performBatchUpdates:^{
+                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
+                for(int i=destinationIndex%_onePageElementCount;i<sourceIndex%_onePageElementCount-1;i++){
+                    [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] toIndexPath:[NSIndexPath indexPathForRow:i+1 inSection:0]];
+                }
+            }completion:^(BOOL finished){
+                
+            }];
+        }
+    }
+    
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:insertCellFromIndex:toIndex:)]){
+            [_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:destinationIndex];
         }
     }
 }
@@ -615,7 +698,7 @@
 -(void) setEnableDragAndDrop:(BOOL)enableDragAndDrop{
     _enableDragAndDrop = enableDragAndDrop;
     if(enableDragAndDrop){
-        if(_longPressGesture == nil){
+        if(_longPressGesture == nil || _panGesture == nil){
             [self setUpGestures];
         }
     }else{
@@ -626,7 +709,7 @@
 -(void) setMinimumPressDurationToStartDragging:(CGFloat)minimumPressDurationToStartDragging{
     if(minimumPressDurationToStartDragging < 0) minimumPressDurationToStartDragging = 0;
     _minimumPressDurationToStartDragging = minimumPressDurationToStartDragging;
-    if(_longPressGesture == nil){
+    if(_longPressGesture == nil || _panGesture == nil){
         [self setUpGestures];
     }
     _longPressGesture.minimumPressDuration = minimumPressDurationToStartDragging;

@@ -27,7 +27,7 @@
 -(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index;
 
 -(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex;
--(void)dashboard:(KDashboard*)dashboard insertCellAtIndex:(NSInteger)index;
+-(void)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex;
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index;
 
 -(void)dashboard:(KDashboard*)dashboard createGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceCell andCellAtIndex:(NSInteger)destinationIndex;
