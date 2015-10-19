@@ -437,7 +437,7 @@
     [_viewControllerEmbedder.view addSubview:_draggedCell];
 }
 
--(void) moveCellWithCellSource:(UICollectionViewCell*)cell toPreviousOrNextPage:(BOOL)previous{
+-(void) moveCellWithCellSource:(UICollectionViewCell*)cell toPreviousOrNextPage:(BOOL)previous withDestinationPoint:(CGPoint)destinationPoint{
     _bufferMovingCell = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, cell.contentView.frame.size.height)];
     for(UIView* subview in cell.subviews){
         [_bufferMovingCell addSubview:subview];
@@ -449,9 +449,9 @@
     
     CGPoint cellDestinationPoint;
     if(previous){
-        cellDestinationPoint = CGPointMake(_memorizedDraggedCellSourceCenter.x-self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
+        cellDestinationPoint = CGPointMake(destinationPoint.x-self.view.frame.size.width, destinationPoint.y);
     }else{
-        cellDestinationPoint = CGPointMake(_memorizedDraggedCellSourceCenter.x+self.view.frame.size.width, _memorizedDraggedCellSourceCenter.y);
+        cellDestinationPoint = CGPointMake(destinationPoint.x+self.view.frame.size.width, destinationPoint.y);
     }
     
     cellDestinationPoint = [self.view convertPoint:cellDestinationPoint toView:nil];
@@ -472,6 +472,9 @@
     UICollectionViewCell* lastDraggedCellSource = [self getCellAtDashboardIndex:index];
     
     if(lastDraggedCellSource != nil){
+        for(UIView* subview in lastDraggedCellSource.subviews){
+            [subview removeFromSuperview];
+        }
         lastDraggedCellSource.hidden = NO;
         for(UIView* subview in _draggedCell.subviews){
             [lastDraggedCellSource addSubview:subview];
@@ -548,6 +551,12 @@
         return;
     }
     
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:swapCellAtIndex:withCellAtIndex:)]){
+            [_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex];
+        }
+    }
+    
     UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
     
     NSIndexPath* sourceIndexPath = [NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0];
@@ -564,16 +573,10 @@
             
         }];
     }else{
-        [self moveCellWithCellSource:[_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:destinationIndexPath] toPreviousOrNextPage:(pageIndexOfSourceCell < pageIndexOfDestinationCell)];
+        [self moveCellWithCellSource:[_currentCollectionViewEmbedder.collectionView cellForItemAtIndexPath:destinationIndexPath] toPreviousOrNextPage:(pageIndexOfSourceCell < pageIndexOfDestinationCell) withDestinationPoint:_memorizedDraggedCellSourceCenter];
     }
     
     [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
-    
-    if(_delegate != nil){
-        if([_delegate respondsToSelector:@selector(dashboard:swapCellAtIndex:withCellAtIndex:)]){
-            [_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex];
-        }
-    }
 }
 
 -(BOOL) isInsertingToTheLeftOfThisCell:(UICollectionViewCell*)cell atThisPoint:(CGPoint)droppingPoint{
@@ -601,42 +604,49 @@
         return;
     }
     
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:insertCellFromIndex:toIndex:)]){
+            [_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:destinationIndex];
+        }
+    }
+    
     UICollectionView* currentCollectionView = _currentCollectionViewEmbedder.collectionView;
     
     if(sourceIndex < destinationIndex){
+        destinationIndex--;
+        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+        
         if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
-            //TODO
+            [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] toPreviousOrNextPage:YES withDestinationPoint:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:_onePageElementCount-1 inSection:0]].center];
+            [currentCollectionView performBatchUpdates:^{
+                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
+                
+            }completion:^(BOOL finished){
+                
+            }];
         }else{
-            destinationIndex--;
-            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
             [currentCollectionView performBatchUpdates:^{
                 [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
-                for(int i=sourceIndex%_onePageElementCount+1;i<destinationIndex%_onePageElementCount;i++){
-                    [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] toIndexPath:[NSIndexPath indexPathForRow:i-1 inSection:0]];
-                }
             }completion:^(BOOL finished){
                 
             }];
         }
     }else{
+        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
         if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
-            //TODO
-        }else{
-            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+            [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:[self getCellCountForCurrentPage]-1 inSection:0]] toPreviousOrNextPage:NO withDestinationPoint:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]].center];
             [currentCollectionView performBatchUpdates:^{
-                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
-                for(int i=destinationIndex%_onePageElementCount;i<sourceIndex%_onePageElementCount-1;i++){
-                    [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] toIndexPath:[NSIndexPath indexPathForRow:i+1 inSection:0]];
-                }
+                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:[self getCellCountForCurrentPage]-1 inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
+                
             }completion:^(BOOL finished){
                 
             }];
-        }
-    }
-    
-    if(_delegate != nil){
-        if([_delegate respondsToSelector:@selector(dashboard:insertCellFromIndex:toIndex:)]){
-            [_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:destinationIndex];
+        }else{
+            [currentCollectionView performBatchUpdates:^{
+                [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:sourceIndex%_onePageElementCount inSection:0] toIndexPath:[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]];
+            }completion:^(BOOL finished){
+                
+            }];
         }
     }
 }
@@ -673,6 +683,10 @@
     }
     
     return nil;
+}
+
+-(NSInteger)getCellCountForCurrentPage{
+    return _currentCollectionViewEmbedder.collectionView.visibleCells.count;
 }
 
 /***************************/
