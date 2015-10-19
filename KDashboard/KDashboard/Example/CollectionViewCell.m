@@ -18,6 +18,7 @@
 }
 
 -(void) customInit{
+    //self.backgroundColor = [UIColor grayColor];
     
     CGFloat imageViewSquareSize = self.frame.size.height*80/100;
     
