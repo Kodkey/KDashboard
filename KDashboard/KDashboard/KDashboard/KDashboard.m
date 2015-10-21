@@ -581,6 +581,7 @@
 /*************************/
 /* DROPPED CELL MANAGING */
 /*************************/
+    //SWAP//
 -(void)swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSInteger)destinationIndex{
     if(sourceIndex == destinationIndex){
         [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
@@ -615,6 +616,7 @@
     [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
 }
 
+    //INSERT//
 -(BOOL) isInsertingToTheLeftOfThisCell:(UICollectionViewCell*)cell atThisPoint:(CGPoint)droppingPoint{
     CGFloat asideCellInsertingZoneWidthPercentage = _enableSwappingAction ? ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE : 50;
     
@@ -651,12 +653,11 @@
     if(sourceIndex < destinationIndex){
         destinationIndex--;
         
+        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+        
         if([self pageOfThisIndex:destinationIndex] != _pageIndex){
-            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
             return;
         }
-        
-        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
         
         if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
             [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] toPreviousOrNextPage:YES withDestinationPoint:_calculatedLastElementCenter];
@@ -674,12 +675,11 @@
             }];
         }
     }else{
+        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
+        
         if([self pageOfThisIndex:destinationIndex] != _pageIndex){
-            [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
             return;
         }
-        
-        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:destinationIndex];
         
         if([self pageOfThisIndex:sourceIndex] != _currentCollectionViewEmbedder.pageIndex){
             [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:[self getCellCountForCurrentPage]-1 inSection:0]] toPreviousOrNextPage:NO withDestinationPoint:_calculatedFirstElementCenter];
@@ -699,6 +699,7 @@
     }
 }
 
+    //DELETE//
 -(void)deleteCellAtIndex:(NSInteger)index{
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:deleteCellAtIndex:)]){
