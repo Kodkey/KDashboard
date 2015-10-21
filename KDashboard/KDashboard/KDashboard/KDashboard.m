@@ -492,6 +492,7 @@
 -(void) bringFirstIndexCellFromNextPageToLastIndexOfCurrentPage{
     UICollectionViewCell* cellFromNextPage = [_dataSource dashboard:self cellForItemAtIndex:_onePageElementCount*(_pageIndex+1)-1];
     _bufferMovingCell = [cellFromNextPage snapshotViewAfterScreenUpdates:YES];
+    cellFromNextPage.hidden = YES;
     _bufferMovingCell.center = [self.view convertPoint:CGPointMake(_calculatedFirstElementCenter.x+_pageViewController.view.frame.size.width, _calculatedFirstElementCenter.y) toView:nil];
     [_viewControllerEmbedder.view addSubview:_bufferMovingCell];
     
@@ -772,19 +773,23 @@
                     }];
                 }
                 
-                /*
-                [currentCollectionView performBatchUpdates:^{
-                    [currentCollectionView deleteItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:index%_onePageElementCount inSection:0]]];
-                    if(_pageIndex != [self pageCount]-1){
-                        [currentCollectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:_onePageElementCount-1 inSection:0]]];
-                    }
-                    
-                }completion:^(BOOL finished){
-                    
-                }];*/
-                
-            }else if(pageOfDeletedCell < _pageIndex){
-                [currentCollectionView reloadSections:[NSIndexSet indexSetWithIndex:0]];
+            }else if(pageOfDeletedCell < _pageIndex){                
+                if(_pageIndex == [self pageCount]-1){
+                    [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] toPreviousOrNextPage:YES withDestinationPoint:_calculatedLastElementCenter];
+                    [currentCollectionView performBatchUpdates:^{
+                        [currentCollectionView deleteItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:index%_onePageElementCount inSection:0]]];
+                    }completion:^(BOOL finished){
+                        
+                    }];
+                }else{
+                    [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] toPreviousOrNextPage:YES withDestinationPoint:_calculatedLastElementCenter];
+                    [self bringFirstIndexCellFromNextPageToLastIndexOfCurrentPage];
+                    [currentCollectionView performBatchUpdates:^{
+                        [currentCollectionView moveItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] toIndexPath:[NSIndexPath indexPathForRow:_onePageElementCount-1 inSection:0]];
+                    }completion:^(BOOL finished){
+                        
+                    }];
+                }
             }
             
         }else{
