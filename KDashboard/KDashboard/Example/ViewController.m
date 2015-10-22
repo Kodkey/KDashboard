@@ -20,7 +20,7 @@
 
 @property (nonatomic, retain) KDashboard* mainDashboard;
 @property (nonatomic, retain) KDashboard* groupDashboard;
-@property (nonatomic, retain) UIView* deleteZone;
+@property (nonatomic, retain) UILabel* deleteZone;
 
 @property (nonatomic, retain) NSMutableArray* dataArray;
 
@@ -54,10 +54,16 @@
     self.view.backgroundColor = [UIColor yellowColor];
     
     _mainDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*12.5/100, screenRect.size.width, screenRect.size.height*75/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
-    _mainDashboard.showPageControl = YES;
+    [_mainDashboard display];
     _mainDashboard.view.backgroundColor = [UIColor cyanColor];
     
-    _deleteZone = [[UIView alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height*10/100)];
+    _deleteZone = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height*10/100)];
+    [_deleteZone setText:@"DELETE ZONE"];
+    _deleteZone.textAlignment = NSTextAlignmentCenter;
+    _deleteZone.lineBreakMode = NSLineBreakByWordWrapping;
+    _deleteZone.numberOfLines = 0;
+    _deleteZone.textColor = [UIColor whiteColor];
+    _deleteZone.font = [_deleteZone.font fontWithSize:screenRect.size.height*3/100];
     _deleteZone.backgroundColor = [UIColor magentaColor];
     [self.view addSubview:_deleteZone];
     
@@ -77,11 +83,21 @@
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     _groupDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(screenRect.size.width*5/100, screenRect.size.height*15/100, screenRect.size.width*90/100, screenRect.size.height*70/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
+    [_groupDashboard display];
     _groupDashboard.showPageControl = NO;
     
     _groupDashboard.view.backgroundColor = [UIColor greenColor];
     _groupDashboard.view.layer.borderColor = [UIColor blackColor].CGColor;
     _groupDashboard.view.layer.borderWidth = _groupDashboard.view.frame.size.width*0.1/100;
+    
+    UILabel* indicationLabel = [[UILabel alloc] initWithFrame:_groupDashboard.view.bounds];
+    [indicationLabel setText:@"Tap on background to dismiss"];
+    indicationLabel.textAlignment = NSTextAlignmentCenter;
+    indicationLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    indicationLabel.numberOfLines = 0;
+    indicationLabel.textColor = [UIColor whiteColor];
+    indicationLabel.font = [indicationLabel.font fontWithSize:screenRect.size.height*3/100];
+    [_groupDashboard.view addSubview:indicationLabel];
     
     [_groupDashboard associateADeleteZone:_deleteZone];
     
@@ -122,15 +138,16 @@
 }
 
 -(NSUInteger)cellCountInDashboard:(KDashboard*)dashboard{
-    if(dashboard == _mainDashboard){
-        return [_dataArray count];
-    }else if(dashboard == _groupDashboard){
+    if(dashboard == _groupDashboard){
         id data = [_dataArray objectAtIndex:_indexOfTheOpenedGroup];
         if([data isKindOfClass:[NSArray class]]){
             NSArray* groupDataArray = (NSArray*)data;
             return [groupDataArray count];
         }
+    }else{
+        return _dataArray.count;
     }
+    
     return 0;
 }
 

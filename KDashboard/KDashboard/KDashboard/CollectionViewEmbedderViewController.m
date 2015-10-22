@@ -46,15 +46,19 @@
 -(UICollectionView*) createCollectionViewWithFrame:(CGRect)frame{
     
     UICollectionViewFlowLayout* collectionViewFlowLayout = [[UICollectionViewFlowLayout alloc] init];
-    [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
+    if([_dataSource maxColumnCount] == 0){
+        [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
+    }else{
+        [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
+    }
     
     NSInteger maxColumnCount, maxRowCount;
     if([_dataSource maxColumnCount] == 0 && [_dataSource maxRowCount] == 0){
         maxColumnCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
         maxRowCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
     }else{
-        maxColumnCount = [_dataSource maxColumnCount] == 0 ? maxRowCount : [_dataSource maxColumnCount];
-        maxRowCount = [_dataSource maxRowCount] == 0 ? maxColumnCount : [_dataSource maxRowCount];
+        maxColumnCount = [_dataSource maxColumnCount] == 0 ? [_dataSource maxRowCount] : [_dataSource maxColumnCount];
+        maxRowCount = [_dataSource maxRowCount] == 0 ? [_dataSource maxColumnCount] : [_dataSource maxRowCount];
     }
     
     [collectionViewFlowLayout setItemSize:CGSizeMake(frame.size.width/maxColumnCount, frame.size.height/maxRowCount)];

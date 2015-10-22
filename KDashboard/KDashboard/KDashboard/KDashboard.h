@@ -45,6 +45,7 @@
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
 
 -(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier andAssociateToThisViewController:(UIViewController*)viewController;
+-(void) display;
 
 -(void) associateADeleteZone:(UIView*)deleteZone;
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;

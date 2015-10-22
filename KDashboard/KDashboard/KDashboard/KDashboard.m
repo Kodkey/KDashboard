@@ -22,6 +22,8 @@
 #define CANCEL_DRAGGING_ANIMATION_DURATION 0.35
 #define DELETE_CELL_DISAPPEAR_ANIMATION_DURATION 0.2
 
+#define DEFAULT_MAX_COLUMN_ROW_COUNT 3
+
 @interface KDashboard ()
 
 @property (nonatomic, weak) UIViewController* viewControllerEmbedder;
@@ -78,19 +80,33 @@
         _identifier = identifier;
         _viewControllerEmbedder = viewController;
         
-        _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
-        
         [self.view setFrame:frame];
-        
-        [self layoutSubviews];
-        if(_enableDragAndDrop)[self setUpGestures];
-        
-        _oneElementHeight = _pageViewController.view.frame.size.height/[_dataSource rowCountPerPageInDashboard:self];
-        _oneElementWidth = _pageViewController.view.frame.size.width/[_dataSource columnCountPerPageInDashboard:self];
-        _calculatedFirstElementCenter = CGPointMake(_oneElementWidth/2,_oneElementHeight/2);
-        _calculatedLastElementCenter = CGPointMake(_pageViewController.view.frame.size.width-_oneElementWidth/2,_pageViewController.view.frame.size.height-_oneElementHeight/2);
     }
     return self;
+}
+
+-(void) display{
+    _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
+    if(_onePageElementCount == 0){
+        _onePageElementCount = [_dataSource cellCountInDashboard:self];
+    }
+    
+    [self layoutSubviews];
+    if(_enableDragAndDrop)[self setUpGestures];
+    
+    NSInteger maxColumnCount, maxRowCount;
+    if([_dataSource rowCountPerPageInDashboard:self] == 0 && [_dataSource columnCountPerPageInDashboard:self] == 0){
+        maxColumnCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+        maxRowCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+    }else{
+        maxColumnCount = [_dataSource columnCountPerPageInDashboard:self] == 0 ? [_dataSource rowCountPerPageInDashboard:self] : [_dataSource columnCountPerPageInDashboard:self];
+        maxRowCount = [_dataSource rowCountPerPageInDashboard:self] == 0 ? [_dataSource columnCountPerPageInDashboard:self] : [_dataSource rowCountPerPageInDashboard:self];
+    }
+    
+    _oneElementHeight = _pageViewController.view.frame.size.height/maxRowCount;
+    _oneElementWidth = _pageViewController.view.frame.size.width/maxColumnCount;
+    _calculatedFirstElementCenter = CGPointMake(_oneElementWidth/2,_oneElementHeight/2);
+    _calculatedLastElementCenter = CGPointMake(_pageViewController.view.frame.size.width-_oneElementWidth/2,_pageViewController.view.frame.size.height-_oneElementHeight/2);
 }
 
 -(void) setDefaultOptions{
@@ -487,7 +503,7 @@
         NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
         UICollectionViewCell* targetedCell = [self getCellAtDashboardIndex:[self getDashboardIndexWithIndexPath:indexPath]];
         
-        if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath]){
+        if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath] && _insideDashboard){
             if(_enableGroupCreation && CFAbsoluteTimeGetCurrent()-_lastTimeDragChangedState > _minimumWaitingDurationToCreateAGroup && [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] != _indexOfTheLastDraggedCellSource){
                 [self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_indexOfTheLastDraggedCellSource];
             }else if(_enableInsertingAction && ([self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint]||[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint])){
@@ -665,10 +681,21 @@
     
     if([self pageOfThisIndex:index] == _pageIndex){
         cellPosition = [self getCellAtDashboardIndex:index].center;
+        cellPosition.x -= _currentCollectionViewEmbedder.collectionView.contentOffset.x;
+        cellPosition.y -= _currentCollectionViewEmbedder.collectionView.contentOffset.y;
     }else{
+        NSInteger maxColumnCount, maxRowCount;
+        if([_dataSource rowCountPerPageInDashboard:self] == 0 && [_dataSource columnCountPerPageInDashboard:self] == 0){
+            maxColumnCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+            maxRowCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+        }else{
+            maxColumnCount = [_dataSource columnCountPerPageInDashboard:self] == 0 ? [_dataSource rowCountPerPageInDashboard:self] : [_dataSource columnCountPerPageInDashboard:self];
+            maxRowCount = [_dataSource rowCountPerPageInDashboard:self] == 0 ? [_dataSource columnCountPerPageInDashboard:self] : [_dataSource rowCountPerPageInDashboard:self];
+        }
+        
         NSInteger indexInItsPage = index-[self pageOfThisIndex:index]*_onePageElementCount;
-        NSInteger row = indexInItsPage/[_dataSource rowCountPerPageInDashboard:self];
-        NSInteger column = indexInItsPage/[_dataSource columnCountPerPageInDashboard:self];
+        NSInteger row = indexInItsPage/maxRowCount;
+        NSInteger column = indexInItsPage/maxColumnCount;
         
         cellPosition = CGPointMake(column*_oneElementWidth+_oneElementWidth/2, row*_oneElementHeight+_oneElementHeight/2);
         
