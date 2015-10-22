@@ -54,6 +54,7 @@
     self.view.backgroundColor = [UIColor yellowColor];
     
     _mainDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*12.5/100, screenRect.size.width, screenRect.size.height*75/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
+    _mainDashboard.showPageControl = YES;
     _mainDashboard.view.backgroundColor = [UIColor cyanColor];
     
     _deleteZone = [[UIView alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height*10/100)];
@@ -80,7 +81,7 @@
     
     _groupDashboard.view.backgroundColor = [UIColor greenColor];
     _groupDashboard.view.layer.borderColor = [UIColor blackColor].CGColor;
-    _groupDashboard.view.layer.borderWidth = _groupDashboard.view.frame.size.width*0.4/100;
+    _groupDashboard.view.layer.borderWidth = _groupDashboard.view.frame.size.width*0.1/100;
     
     [_groupDashboard associateADeleteZone:_deleteZone];
     
@@ -168,6 +169,10 @@
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     [effectiveDataArray removeObjectAtIndex:index];
+    
+    if(((CollectionViewCell*)[_mainDashboard cellAtDashboardIndex:_indexOfTheOpenedGroup]).isAGroup){
+        [_mainDashboard reloadData];
+    }
 }
 
 -(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index{

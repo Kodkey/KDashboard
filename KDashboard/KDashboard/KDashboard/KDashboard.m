@@ -915,8 +915,7 @@
         if([_delegate respondsToSelector:@selector(dashboard:addGroupAtIndex:withCellAtIndex:)]){
             [_delegate dashboard:self addGroupAtIndex:index withCellAtIndex:sourceIndex];
             
-            [self hideDraggedCellAndRestoreCellAtDashboardIndex:sourceIndex];
-            [_currentCollectionViewEmbedder.collectionView reloadData];
+            [self hideDraggedCellWithCompletionBlock:nil];
         }else{
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
         }
@@ -1028,6 +1027,10 @@
 /****************/
 -(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index{
     return [self getCellAtDashboardIndex:index];
+}
+
+-(void) reloadData{
+    [_currentCollectionViewEmbedder.collectionView reloadData];
 }
 
 @end

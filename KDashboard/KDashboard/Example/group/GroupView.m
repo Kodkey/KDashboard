@@ -10,8 +10,8 @@
 #import "DotView.h"
 
 #define DEFAULT_DOT_COUNT 2
-#define DEFAULT_ROW_DOT_COUNT 3
-#define DEFAULT_COLUMN_DOT_COUNT 3
+#define DEFAULT_ROW_DOT_COUNT 4
+#define DEFAULT_COLUMN_DOT_COUNT 4
 
 @interface GroupView ()
 

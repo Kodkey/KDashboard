@@ -65,5 +65,6 @@
 //*********//
 
 -(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
+-(void) reloadData;
 
 @end

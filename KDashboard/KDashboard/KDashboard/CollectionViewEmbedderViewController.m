@@ -48,7 +48,16 @@
     UICollectionViewFlowLayout* collectionViewFlowLayout = [[UICollectionViewFlowLayout alloc] init];
     [collectionViewFlowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
     
-    [collectionViewFlowLayout setItemSize:CGSizeMake(frame.size.width/[_dataSource maxColumnCount], frame.size.height/[_dataSource maxRowCount])];
+    NSInteger maxColumnCount, maxRowCount;
+    if([_dataSource maxColumnCount] == 0 && [_dataSource maxRowCount] == 0){
+        maxColumnCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+        maxRowCount = DEFAULT_MAX_COLUMN_ROW_COUNT;
+    }else{
+        maxColumnCount = [_dataSource maxColumnCount] == 0 ? maxRowCount : [_dataSource maxColumnCount];
+        maxRowCount = [_dataSource maxRowCount] == 0 ? maxColumnCount : [_dataSource maxRowCount];
+    }
+    
+    [collectionViewFlowLayout setItemSize:CGSizeMake(frame.size.width/maxColumnCount, frame.size.height/maxRowCount)];
     [collectionViewFlowLayout setMinimumInteritemSpacing:0];
     [collectionViewFlowLayout setMinimumLineSpacing:0];
     
