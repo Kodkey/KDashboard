@@ -32,6 +32,7 @@
 @property (nonatomic, retain) UIView* bufferMovingCell;
 
 @property (nonatomic, weak) UIPageViewController* pageViewController;
+@property (nonatomic, weak) UIScrollView* theScrollView;
 @property (nonatomic, weak) CollectionViewEmbedderViewController* currentCollectionViewEmbedder;
 @property (nonatomic, weak) CollectionViewEmbedderViewController* lastWorkingOnCollectionViewEmbedder;
 @property (nonatomic, retain) Class cellClass;
@@ -130,6 +131,8 @@
     _pageViewController = [self createPageViewControllerWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height*(_showPageControl ? (float)PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE/100 : 1))];
     [self loadInitialViewControllerAtIndex:0 withAnimation:NO andDirection:UIPageViewControllerNavigationDirectionForward andCompletionBlock:nil];
     
+    [self setBounces:YES];
+    
     CGFloat asideZoneWidth = self.view.frame.size.width*ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE/100;
     _leftSideSlidingDetectionZone = [self createAsideDetectionZoneWithFrame:CGRectMake(0, 0, asideZoneWidth, self.view.frame.size.height)];
     _rightSideSlidingDetectionZone = [self createAsideDetectionZoneWithFrame:CGRectMake(self.view.frame.size.width-asideZoneWidth, 0, asideZoneWidth, self.view.frame.size.height)];
@@ -185,7 +188,7 @@
 
 -(UIPageControl*) createPageControlWithFrame:(CGRect)frame{
     UIPageControl* aPageControl = [[UIPageControl alloc] initWithFrame:frame];
-    aPageControl.backgroundColor = [UIColor orangeColor];
+    aPageControl.backgroundColor = [UIColor clearColor];
     aPageControl.enabled = NO;
     
     [self.view addSubview:aPageControl];
@@ -296,9 +299,22 @@
     }
 }
 
-#pragma mark - dequeueReusableCellWithIdentifier:forIndex:
-- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{
-    return [_lastWorkingOnCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (_pageIndex == 0 && scrollView.contentOffset.x < scrollView.bounds.size.width) {
+        scrollView.contentOffset = CGPointMake(scrollView.bounds.size.width, 0);
+    }
+    if (_pageIndex == [self pageCount]-1 && scrollView.contentOffset.x > scrollView.bounds.size.width) {
+        scrollView.contentOffset = CGPointMake(scrollView.bounds.size.width, 0);
+    }
+}
+
+- (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset{
+    if (_pageIndex == 0 && scrollView.contentOffset.x <= scrollView.bounds.size.width) {
+        *targetContentOffset = CGPointMake(scrollView.bounds.size.width, 0);
+    }
+    if (_pageIndex == [self pageCount]-1 && scrollView.contentOffset.x >= scrollView.bounds.size.width) {
+        *targetContentOffset = CGPointMake(scrollView.bounds.size.width, 0);
+    }
 }
 
 /***********************************************/
@@ -361,11 +377,11 @@
     _longPressGesture.delegate = self;
     _longPressGesture.numberOfTouchesRequired = 1;
     _longPressGesture.minimumPressDuration = DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING;
-    [self.view addGestureRecognizer:_longPressGesture];
+    [_viewControllerEmbedder.view addGestureRecognizer:_longPressGesture];
     
     _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     _panGesture.delegate = self;
-    [self.view addGestureRecognizer:_panGesture];
+    [_viewControllerEmbedder.view addGestureRecognizer:_panGesture];
 }
 
 -(void)removeGestures{
@@ -574,6 +590,11 @@
     
     _draggedCell.center = startPoint;
     [_viewControllerEmbedder.view addSubview:_draggedCell];
+}
+
+-(void) showDraggedCellWithAnotherDraggedCell:(UIView*)anotherDraggedCell fromThisStartPoint:(CGPoint)startPoint{
+    _draggedCell = anotherDraggedCell;
+    _draggedCell.center = startPoint;
 }
 
 -(void) moveCellWithCellSource:(UICollectionViewCell*)cell toPreviousOrNextPage:(BOOL)previous withDestinationPoint:(CGPoint)destinationPoint{
@@ -989,16 +1010,25 @@
     return _currentCollectionViewEmbedder.collectionView.visibleCells.count;
 }
 
-/***************************/
-/* DELETE ZONE ASSOCIATION */
-/***************************/
--(void) associateADeleteZone:(UIView*)deleteZone{
-    _deleteZone = deleteZone;
-}
-
 /*******************/
 /* OPTIONS METHODS */
 /*******************/
+-(void) setBounces:(BOOL)bounces{
+    _bounces = bounces;
+    
+    if(bounces){
+        _theScrollView.delegate = nil;
+        _theScrollView = nil;
+    }else{
+        for(UIView* subview in _pageViewController.view.subviews){
+            if([subview isKindOfClass:[UIScrollView class]]){
+                _theScrollView = (UIScrollView*)subview;
+                _theScrollView.delegate = self;
+            }
+        }
+    }
+}
+
 -(void) setShowPageControlWhenOnlyOnePage:(BOOL)showPageControlWhenOnlyOnePage{
     _showPageControlWhenOnlyOnePage = showPageControlWhenOnlyOnePage;
     [self reloadNumberOfPages];
@@ -1052,12 +1082,24 @@
 /****************/
 /* USER METHODS */
 /****************/
+-(void) associateADeleteZone:(UIView*)deleteZone{
+    _deleteZone = deleteZone;
+}
+
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{
+    return [_lastWorkingOnCollectionViewEmbedder dequeueReusableCellWithIdentifier:identifier forIndex:index];
+}
+
 -(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index{
     return [self getCellAtDashboardIndex:index];
 }
 
 -(void) reloadData{
     [_currentCollectionViewEmbedder.collectionView reloadData];
+}
+
+-(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard{
+    //TODO
 }
 
 @end

@@ -39,7 +39,7 @@
 
 
 
-@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
+@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
@@ -47,10 +47,9 @@
 -(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier andAssociateToThisViewController:(UIViewController*)viewController;
 -(void) display;
 
--(void) associateADeleteZone:(UIView*)deleteZone;
-- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
-
 // OPTIONS //
+@property (nonatomic) BOOL bounces;
+
 @property (nonatomic) BOOL showPageControlWhenOnlyOnePage;
 @property (nonatomic) BOOL showPageControl;
 
@@ -62,10 +61,12 @@
 @property (nonatomic) CGFloat minimumPressDurationToStartDragging;
 @property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
 @property (nonatomic) CGFloat minimumWaitingDurationToCreateAGroup;
-
 //*********//
 
+-(void) associateADeleteZone:(UIView*)deleteZone;
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
 -(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
 -(void) reloadData;
+-(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard;
 
 @end

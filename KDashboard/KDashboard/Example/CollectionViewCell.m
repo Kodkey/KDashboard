@@ -30,7 +30,7 @@
 }
 
 -(void) customInit{
-    CGFloat imageViewSquareSize = self.frame.size.height*80/100;
+    CGFloat imageViewSquareSize = MIN(self.frame.size.height*80/100,self.frame.size.width*95/100);
     
     _cellImageView = [self createImageViewWithFrame:CGRectMake((self.frame.size.width-imageViewSquareSize)/2, 0, imageViewSquareSize, imageViewSquareSize)];
     
@@ -52,7 +52,7 @@
 -(UILabel*) createLabelWithFrame:(CGRect)frame{
     UILabel* aLabel = [[UILabel alloc] initWithFrame:frame];
     aLabel.textAlignment = NSTextAlignmentCenter;
-    aLabel.font = [aLabel.font fontWithSize:frame.size.height*80/100];
+    aLabel.font = [aLabel.font fontWithSize:self.frame.size.height*15/100];
     
     [self addSubview:aLabel];
     
@@ -93,6 +93,10 @@
 
 -(void) setDotCount:(NSInteger)dotCount{
     [_groupView setDotCount:dotCount];
+}
+
+-(void) setRowDotCount:(NSInteger)rowDotCount andColumnDotCount:(NSInteger)columntDotCount{
+    [_groupView setRowDotCount:rowDotCount andColumnDotCount:columntDotCount];
 }
 
 @end

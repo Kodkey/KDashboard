@@ -15,6 +15,8 @@
 -(void) customizeWithImage:(UIImage*)image andText:(NSString*)text;
 -(void) customizeGroupWithDotCount:(NSInteger)dotCount andText:(NSString*)text;
 -(void) toggleGroupView;
+
 -(void) setDotCount:(NSInteger)dotCount;
+-(void) setRowDotCount:(NSInteger)rowDotCount andColumnDotCount:(NSInteger)columntDotCount;
 
 @end

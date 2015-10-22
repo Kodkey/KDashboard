@@ -51,11 +51,11 @@
 - (void) customize{
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     
-    self.view.backgroundColor = [UIColor yellowColor];
+    self.view.backgroundColor = [UIColor whiteColor];
     
     _mainDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*12.5/100, screenRect.size.width, screenRect.size.height*75/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
     [_mainDashboard display];
-    _mainDashboard.view.backgroundColor = [UIColor cyanColor];
+    _mainDashboard.view.backgroundColor = [UIColor grayColor];
     
     _deleteZone = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height*10/100)];
     [_deleteZone setText:@"DELETE ZONE"];
@@ -64,7 +64,7 @@
     _deleteZone.numberOfLines = 0;
     _deleteZone.textColor = [UIColor whiteColor];
     _deleteZone.font = [_deleteZone.font fontWithSize:screenRect.size.height*3/100];
-    _deleteZone.backgroundColor = [UIColor magentaColor];
+    _deleteZone.backgroundColor = [UIColor blackColor];
     [self.view addSubview:_deleteZone];
     
     [_mainDashboard associateADeleteZone:_deleteZone];
@@ -85,8 +85,10 @@
     _groupDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(screenRect.size.width*5/100, screenRect.size.height*15/100, screenRect.size.width*90/100, screenRect.size.height*70/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
     [_groupDashboard display];
     _groupDashboard.showPageControl = NO;
+    _groupDashboard.enableGroupCreation = NO;
+    _groupDashboard.bounces = NO;
     
-    _groupDashboard.view.backgroundColor = [UIColor greenColor];
+    _groupDashboard.view.backgroundColor = [UIColor lightGrayColor];
     _groupDashboard.view.layer.borderColor = [UIColor blackColor].CGColor;
     _groupDashboard.view.layer.borderWidth = _groupDashboard.view.frame.size.width*0.1/100;
     
@@ -98,6 +100,7 @@
     indicationLabel.textColor = [UIColor whiteColor];
     indicationLabel.font = [indicationLabel.font fontWithSize:screenRect.size.height*3/100];
     [_groupDashboard.view addSubview:indicationLabel];
+    [_groupDashboard.view sendSubviewToBack:indicationLabel];
     
     [_groupDashboard associateADeleteZone:_deleteZone];
     
@@ -130,6 +133,11 @@
 
 #pragma mark - DASHBOARD DATA SOURCE METHODS
 -(NSUInteger)rowCountPerPageInDashboard:(KDashboard*)dashboard{
+    if(dashboard == _mainDashboard){
+        return ROW_COUNT;
+    }else if(dashboard == _groupDashboard){
+        return 0;
+    }
     return ROW_COUNT;
 }
 
@@ -138,14 +146,14 @@
 }
 
 -(NSUInteger)cellCountInDashboard:(KDashboard*)dashboard{
-    if(dashboard == _groupDashboard){
+    if(dashboard == _mainDashboard){
+        return _dataArray.count;
+    }else if(dashboard == _groupDashboard){
         id data = [_dataArray objectAtIndex:_indexOfTheOpenedGroup];
         if([data isKindOfClass:[NSArray class]]){
             NSArray* groupDataArray = (NSArray*)data;
             return [groupDataArray count];
         }
-    }else{
-        return _dataArray.count;
     }
     
     return 0;
@@ -193,9 +201,6 @@
 }
 
 -(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index{
-    if(dashboard == _groupDashboard){
-        return;
-    }
     
     if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:index]).isAGroup){
         [self createAndShowGroupDashboardWithGroupIndex:index];
@@ -203,7 +208,7 @@
 }
 
 -(void)dashboard:(KDashboard *)dashboard canCreateGroupAtIndex:(NSInteger)index withSourceIndex:(NSInteger)sourceIndex{
-    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup || dashboard == _groupDashboard){
+    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup){
         _lastHollowingGroupCellIndex = -1;
         return;
     }
@@ -224,9 +229,6 @@
 }
 
 -(void)dismissGroupCreationPossibilityFromDashboard:(KDashboard*)dashboard{
-    if(dashboard == _groupDashboard){
-        return;
-    }
     
     CollectionViewCell* lastHollowingGroupCell = (CollectionViewCell*)[dashboard cellAtDashboardIndex:_lastHollowingGroupCellIndex];
     
@@ -242,13 +244,13 @@
 }
 
 -(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex{
-    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup || dashboard == _groupDashboard){
+    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup){
         return;
     }
     
     id data = [_dataArray objectAtIndex:index];
-    
-    /*if([data isKindOfClass:[NSArray class]]){
+    /*
+    if([data isKindOfClass:[NSArray class]]){
         NSMutableArray* groupDataArray = [NSMutableArray arrayWithArray:(NSArray*)data];
         [groupDataArray addObject:[_dataArray objectAtIndex:sourceIndex]];
         
@@ -276,9 +278,11 @@
     [_dataArray removeObjectAtIndex:sourceIndex];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    
+-(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{/*
+    if(dashboard == _groupDashboard){
+        [_groupDashboard passDraggedCellToAnotherDashboard:_mainDashboard];
+        [self closeGroupDashboard];
+    }*/
 }
 
 @end
