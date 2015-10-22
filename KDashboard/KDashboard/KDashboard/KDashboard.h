@@ -21,8 +21,10 @@
 
 @protocol KDashboardDelegate <NSObject>
 @optional
--(void)startDraggingFromDashboard:(KDashboard*)dashboard;
+-(void)dashboard:(KDashboard*)dashboard userStartedDragging:(UIView*)draggedCell;
 -(void)endDraggingFromDashboard:(KDashboard*)dashboard;
+-(void)dashboard:(KDashboard *)dashboard userDraggedCellInsideDashboard:(UIView *)draggedCell;
+-(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell;
 
 -(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index;
 
@@ -30,13 +32,14 @@
 -(void)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex;
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index;
 
--(void)dashboard:(KDashboard*)dashboard createGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceCell andCellAtIndex:(NSInteger)destinationIndex;
--(void)dashboard:(KDashboard*)dashboard addCellAtIndex:(NSInteger)sourceIndex toGroupAtIndex:(NSInteger)destinationIndex;
+-(void)dashboard:(KDashboard *)dashboard canCreateGroupAtIndex:(NSInteger)index withSourceIndex:(NSInteger)sourceIndex;
+-(void)dismissGroupCreationPossibilityFromDashboard:(KDashboard*)dashboard;
+-(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex;
 @end
 
 
 
-@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIScrollViewDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate, UIGestureRecognizerDelegate>
+@interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
 @property (nonatomic, assign) id<KDashboardDelegate> delegate;
@@ -51,10 +54,16 @@
 @property (nonatomic) BOOL showPageControl;
 
 @property (nonatomic) BOOL enableDragAndDrop;
-@property (nonatomic) CGFloat minimumPressDurationToStartDragging;
-@property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
 @property (nonatomic) BOOL enableSwappingAction;
 @property (nonatomic) BOOL enableInsertingAction;
+@property (nonatomic) BOOL enableGroupCreation;
+
+@property (nonatomic) CGFloat minimumPressDurationToStartDragging;
+@property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
+@property (nonatomic) CGFloat minimumWaitingDurationToCreateAGroup;
+
 //*********//
+
+-(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
 
 @end

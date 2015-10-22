@@ -8,6 +8,8 @@
 
 #import "CollectionViewEmbedderViewController.h"
 
+#define DEFAULT_MAX_COLUMN_ROW_COUNT 3
+
 @interface CollectionViewEmbedderViewController ()
 
 @property (nonatomic) CGRect theFrame;

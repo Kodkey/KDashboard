@@ -10,12 +10,14 @@
 
 #define IS_IOS7 ([[[UIDevice currentDevice] systemVersion] floatValue] == 7.0)
 
-#define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 95
-#define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 6
-#define ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE 20
+#define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 95.0
+#define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 6.0
+#define ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE 20.0
 
 #define DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING 0.5
 #define DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION 0.8
+#define DEFAULT_MINIUM_WAITING_TO_CREATE_A_GROUP 0.8
+#define DISMISS_GROUP_CREATION_SENSIBILITY 15.0
 
 #define CANCEL_DRAGGING_ANIMATION_DURATION 0.35
 #define DELETE_CELL_DISAPPEAR_ANIMATION_DURATION 0.2
@@ -42,6 +44,7 @@
 @property (nonatomic) NSInteger indexOfTheLastDraggedCellSource;
 @property (nonatomic) BOOL movedDraggedCell;
 @property (nonatomic) CGPoint memorizedDraggedCellSourceCenter;
+@property (nonatomic) BOOL insideDashboard;
 
 @property (nonatomic) CGFloat oneElementWidth;
 @property (nonatomic) CGFloat oneElementHeight;
@@ -51,6 +54,12 @@
 @property (nonatomic, weak) UIView* leftSideSlidingDetectionZone;
 @property (nonatomic, weak) UIView* rightSideSlidingDetectionZone;
 @property (nonatomic, retain) NSTimer* slidingWhileDraggingTimer;
+
+@property (nonatomic) CFAbsoluteTime lastTimeDragChangedState;
+@property (nonatomic) CGPoint lastTouchPoint;
+@property (nonatomic) BOOL canCreateGroup;
+@property (nonatomic, retain) NSTimer* canCreateGroupTimer;
+@property (nonatomic) NSInteger lastIndexWhereBeingAbleToCreateAGroup;
 
 @end
 
@@ -93,8 +102,10 @@
     _enableDragAndDrop = YES;
     _enableSwappingAction = YES;
     _enableInsertingAction = YES;
+    _enableGroupCreation = YES;
     
     _slidingPageWhileDraggingWaitingDuration = DEFAULT_SLIDING_PAGE_WHILE_DRAGGING_WAIT_DURATION;
+    _minimumWaitingDurationToCreateAGroup = DEFAULT_MINIUM_WAITING_TO_CREATE_A_GROUP;
 }
 
 -(void) layoutSubviews{
@@ -350,11 +361,10 @@
 
 - (void)handlePress:(UILongPressGestureRecognizer *)gesture{
     if(gesture.state == UIGestureRecognizerStateBegan){
-        if(_delegate != nil){
-            if([_delegate respondsToSelector:@selector(startDraggingFromDashboard:)]){
-                [_delegate startDraggingFromDashboard:self];
-            }
-        }
+
+        _lastTouchPoint = [gesture locationInView:_viewControllerEmbedder.view];
+        _lastTimeDragChangedState = CFAbsoluteTimeGetCurrent();
+        _insideDashboard = YES;
         
         UICollectionView* targetedCollectionView = _currentCollectionViewEmbedder.collectionView;
         CGPoint point = [gesture locationInView:targetedCollectionView];
@@ -362,9 +372,15 @@
         if (indexPath != nil) {
             _indexOfTheLastDraggedCellSource = [self getDashboardIndexWithIndexPath:indexPath];
             [self showDraggedCellWithSourceCell:[targetedCollectionView cellForItemAtIndexPath:indexPath] fromThisStartPoint:[gesture locationInView:_viewControllerEmbedder.view]];
+            if(_delegate != nil){
+                if([_delegate respondsToSelector:@selector(dashboard:userStartedDragging:)]){
+                    [_delegate dashboard:self userStartedDragging:_draggedCell];
+                }
+            }
         }
         
     }else if(gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled || gesture.state == UIGestureRecognizerStateFailed){
+        [self cancelCanCreateAGroupTimer];
         if(!_movedDraggedCell){
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
         }else{
@@ -394,6 +410,55 @@
         CGPoint point = [gesture locationInView:_viewControllerEmbedder.view];
         _draggedCell.center = point;
         
+        if(CGRectContainsPoint(self.view.frame, point)){
+            if(!_insideDashboard){
+                if(_delegate != nil){
+                    if([_delegate respondsToSelector:@selector(dashboard:userDraggedCellInsideDashboard:)]){
+                        [_delegate dashboard:self userDraggedCellInsideDashboard:_draggedCell];
+                    }
+                }
+                _insideDashboard = YES;
+            }
+        }else{
+            if(_insideDashboard){
+                if(_delegate != nil){
+                    if([_delegate respondsToSelector:@selector(dashboard:userDraggedCellOutsideDashboard:)]){
+                        [_delegate dashboard:self userDraggedCellOutsideDashboard:_draggedCell];
+                    }
+                }
+                _insideDashboard = NO;
+            }
+        }
+        
+        if(_enableGroupCreation){
+            if([self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] == _indexOfTheLastDraggedCellSource){
+                [self cancelCanCreateAGroupTimer];
+                
+                if(_canCreateGroup && _delegate != nil){
+                    if([_delegate respondsToSelector:@selector(dismissGroupCreationPossibilityFromDashboard:)]){
+                        [_delegate dismissGroupCreationPossibilityFromDashboard:self];
+                    }
+                    _canCreateGroup = NO;
+                    _lastIndexWhereBeingAbleToCreateAGroup = -1;
+                }
+            }
+            if(ABS(point.x-_lastTouchPoint.x)+ABS(point.y-_lastTouchPoint.y) > DISMISS_GROUP_CREATION_SENSIBILITY || _lastIndexWhereBeingAbleToCreateAGroup != [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture]){
+                _lastTimeDragChangedState = CFAbsoluteTimeGetCurrent();
+                
+                [self cancelCanCreateAGroupTimer];
+                [self initiateCanCreateAGroupTimerWithGesture:gesture];
+                
+                if(_canCreateGroup && _delegate != nil){
+                    if([_delegate respondsToSelector:@selector(dismissGroupCreationPossibilityFromDashboard:)]){
+                        [_delegate dismissGroupCreationPossibilityFromDashboard:self];
+                    }
+                    _canCreateGroup = NO;
+                    _lastIndexWhereBeingAbleToCreateAGroup = -1;
+                }
+            }
+            _lastTouchPoint = point;
+        }
+        
         if(CGRectContainsPoint([self.view convertRect:_leftSideSlidingDetectionZone.frame toView:_viewControllerEmbedder.view], point)){
             if(_slidingWhileDraggingTimer == nil){
                 _slidingWhileDraggingTimer = [NSTimer scheduledTimerWithTimeInterval:_slidingPageWhileDraggingWaitingDuration
@@ -417,16 +482,16 @@
     }
     
     if(gesture.state == UIGestureRecognizerStateRecognized){
+        [self cancelCanCreateAGroupTimer];
         CGPoint droppingPoint = [gesture locationInView:_currentCollectionViewEmbedder.collectionView];
         NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
         UICollectionViewCell* targetedCell = [self getCellAtDashboardIndex:[self getDashboardIndexWithIndexPath:indexPath]];
         
         if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath]){
-            BOOL insertLeft = [self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint];
-            BOOL insertRight = [self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint];
-            
-            if(_enableInsertingAction && (insertLeft||insertRight)){
-                [self insertCellFromIndex:_indexOfTheLastDraggedCellSource toIndex:[self getDashboardIndexWithIndexPath:indexPath]+(int)insertRight];
+            if(_enableGroupCreation && CFAbsoluteTimeGetCurrent()-_lastTimeDragChangedState > _minimumWaitingDurationToCreateAGroup && [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] != _indexOfTheLastDraggedCellSource){
+                [self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_indexOfTheLastDraggedCellSource];
+            }else if(_enableInsertingAction && ([self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint]||[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint])){
+                [self insertCellFromIndex:_indexOfTheLastDraggedCellSource toIndex:[self getDashboardIndexWithIndexPath:indexPath]+(int)[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint]];
             }else if(_enableSwappingAction){
                 [self swapCellAtIndex:_indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
             }else{
@@ -444,6 +509,42 @@
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
         }
     }
+}
+
+-(void)canCreateAGroup{
+    _canCreateGroup = YES;
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:canCreateGroupAtIndex:withSourceIndex:)]){
+            [_delegate dashboard:self canCreateGroupAtIndex:_lastIndexWhereBeingAbleToCreateAGroup withSourceIndex:_indexOfTheLastDraggedCellSource];
+        }
+    }
+}
+
+-(void) initiateCanCreateAGroupTimerWithGesture:(UIPanGestureRecognizer*)gesture{
+    NSInteger indexWhereBeingAbleToCreateAGroup = [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture];
+    if(indexWhereBeingAbleToCreateAGroup >= 0){
+        _lastIndexWhereBeingAbleToCreateAGroup = indexWhereBeingAbleToCreateAGroup;
+        _canCreateGroupTimer = [NSTimer scheduledTimerWithTimeInterval:_minimumWaitingDurationToCreateAGroup
+                                                                target:self
+                                                              selector:@selector(canCreateAGroup)
+                                                              userInfo:nil
+                                                               repeats:NO];
+    }
+}
+
+-(void) cancelCanCreateAGroupTimer{
+    if(_canCreateGroupTimer != nil){
+        [_canCreateGroupTimer invalidate];
+        _canCreateGroupTimer = nil;
+    }
+}
+
+-(NSInteger)getDashboardCellIndexUnderDraggedCellWithGesture:(UIPanGestureRecognizer*)gesture{
+    NSIndexPath* indexPathUnderDraggedCell = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:[gesture locationInView:_currentCollectionViewEmbedder.collectionView]];
+    if(indexPathUnderDraggedCell != nil){
+        return [self getDashboardIndexWithIndexPath:indexPathUnderDraggedCell];
+    }
+    return -1;
 }
 
 /*************************/
@@ -773,7 +874,7 @@
                     }];
                 }
                 
-            }else if(pageOfDeletedCell < _pageIndex){                
+            }else if(pageOfDeletedCell < _pageIndex){
                 if(_pageIndex == [self pageCount]-1){
                     [self moveCellWithCellSource:[currentCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] toPreviousOrNextPage:YES withDestinationPoint:_calculatedLastElementCenter];
                     [currentCollectionView performBatchUpdates:^{
@@ -792,6 +893,30 @@
                 }
             }
             
+        }else{
+            [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        }
+    }else{
+        [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+    }
+}
+
+    //CREATE_GROUP
+-(void) addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex{
+    if(_canCreateGroup && _delegate != nil){
+        if([_delegate respondsToSelector:@selector(dismissGroupCreationPossibilityFromDashboard:)]){
+            [_delegate dismissGroupCreationPossibilityFromDashboard:self];
+        }
+        _canCreateGroup = NO;
+        _lastIndexWhereBeingAbleToCreateAGroup = -1;
+    }
+    
+    if(_delegate != nil){
+        if([_delegate respondsToSelector:@selector(dashboard:addGroupAtIndex:withCellAtIndex:)]){
+            [_delegate dashboard:self addGroupAtIndex:index withCellAtIndex:sourceIndex];
+            
+            [self hideDraggedCellAndRestoreCellAtDashboardIndex:sourceIndex];
+            [_currentCollectionViewEmbedder.collectionView reloadData];
         }else{
             [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
         }
@@ -869,6 +994,18 @@
     }
 }
 
+-(void) setEnableSwappingAction:(BOOL)enableSwappingAction{
+    _enableSwappingAction = enableSwappingAction;
+}
+
+-(void) setEnableInsertingAction:(BOOL)enableInsertingAction{
+    _enableInsertingAction = enableInsertingAction;
+}
+
+-(void) setEnableGroupCreation:(BOOL)enableGroupCreation{
+    _enableGroupCreation = enableGroupCreation;
+}
+
 -(void) setMinimumPressDurationToStartDragging:(CGFloat)minimumPressDurationToStartDragging{
     if(minimumPressDurationToStartDragging < 0) minimumPressDurationToStartDragging = 0;
     _minimumPressDurationToStartDragging = minimumPressDurationToStartDragging;
@@ -882,12 +1019,15 @@
     _slidingPageWhileDraggingWaitingDuration = slidingPageWhileDraggingWaitingDuration;
 }
 
--(void) setEnableSwappingAction:(BOOL)enableSwappingAction{
-    _enableSwappingAction = enableSwappingAction;
+-(void) setMinimumWaitingDurationToCreateAGroup:(CGFloat)minimumWaitingDurationToCreateAGroup{
+    _minimumWaitingDurationToCreateAGroup = minimumWaitingDurationToCreateAGroup;
 }
 
--(void) setEnableInsertingAction:(BOOL)enableInsertingAction{
-    _enableInsertingAction = enableInsertingAction;
+/****************/
+/* USER METHODS */
+/****************/
+-(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index{
+    return [self getCellAtDashboardIndex:index];
 }
 
 @end

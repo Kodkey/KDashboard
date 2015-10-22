@@ -8,6 +8,18 @@
 
 #import "CollectionViewCell.h"
 
+#import "GroupView.h"
+
+#define TOGGLE_GROUP_HOLLOW_ANIMATION_DURATION 0.15
+
+@interface CollectionViewCell ()
+
+@property (nonatomic, weak) UIImageView* cellImageView;
+@property (nonatomic, weak) UILabel* cellLabel;
+@property (nonatomic) GroupView* groupView;
+
+@end
+
 @implementation CollectionViewCell
 
 -(id) initWithFrame:(CGRect)frame{
@@ -18,13 +30,15 @@
 }
 
 -(void) customInit{
-    //self.backgroundColor = [UIColor grayColor];
-    
     CGFloat imageViewSquareSize = self.frame.size.height*80/100;
     
     _cellImageView = [self createImageViewWithFrame:CGRectMake((self.frame.size.width-imageViewSquareSize)/2, 0, imageViewSquareSize, imageViewSquareSize)];
     
     _cellLabel = [self createLabelWithFrame:CGRectMake(0, imageViewSquareSize, self.frame.size.width, self.frame.size.height-imageViewSquareSize)];
+    
+    _groupView = [[GroupView alloc] initWithFrame:_cellImageView.frame];
+    _groupView.alpha = 0;
+    [self addSubview:_groupView];
 }
 
 -(UIImageView*) createImageViewWithFrame:(CGRect)frame{
@@ -48,6 +62,37 @@
 -(void) customizeWithImage:(UIImage*)image andText:(NSString*)text{
     _cellImageView.image = image;
     _cellLabel.text = text;
+    
+    _isAGroup = NO;
+    _cellImageView.alpha = 1;
+    _groupView.alpha = 0;
+}
+
+-(void) customizeGroupWithDotCount:(NSInteger)dotCount andText:(NSString*)text{
+    [_groupView setDotCount:dotCount];
+    _cellLabel.text = text;
+    
+    _isAGroup = YES;
+    _cellImageView.alpha = 0;
+    _groupView.alpha = 1;
+}
+
+-(void) toggleGroupView{
+    [UIView animateWithDuration:TOGGLE_GROUP_HOLLOW_ANIMATION_DURATION
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         _cellImageView.alpha = -(_cellImageView.alpha-1);
+                         _cellLabel.alpha = -(_cellLabel.alpha-1);
+                         _groupView.alpha = -(_groupView.alpha-1);
+                     }
+                     completion:^(BOOL finished){
+                         
+                     }];
+}
+
+-(void) setDotCount:(NSInteger)dotCount{
+    [_groupView setDotCount:dotCount];
 }
 
 @end

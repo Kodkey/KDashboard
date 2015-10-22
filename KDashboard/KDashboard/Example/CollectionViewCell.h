@@ -10,9 +10,11 @@
 
 @interface CollectionViewCell : UICollectionViewCell
 
-@property (nonatomic, weak) UIImageView* cellImageView;
-@property (nonatomic, weak) UILabel* cellLabel;
+@property (nonatomic) BOOL isAGroup;
 
 -(void) customizeWithImage:(UIImage*)image andText:(NSString*)text;
+-(void) customizeGroupWithDotCount:(NSInteger)dotCount andText:(NSString*)text;
+-(void) toggleGroupView;
+-(void) setDotCount:(NSInteger)dotCount;
 
 @end
