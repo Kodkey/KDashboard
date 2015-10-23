@@ -2,8 +2,8 @@
 //  ViewController.m
 //  KDashboard
 //
-//  Created by COURELJordan on 13/10/2015.
-//  Copyright (c) 2015 COURELJordan. All rights reserved.
+//  Created by KODKEY on 13/10/2015.
+//  Copyright (c) 2015 KODKEY. All rights reserved.
 //
 
 #import "ViewController.h"
@@ -280,7 +280,7 @@
 
 -(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{/*
     if(dashboard == _groupDashboard){
-        [_groupDashboard passDraggedCellToAnotherDashboard:_mainDashboard];
+        [_groupDashboard passDraggedCellToAnotherDashboard:_mainDashboard];//TODO
         [self closeGroupDashboard];
     }*/
 }
