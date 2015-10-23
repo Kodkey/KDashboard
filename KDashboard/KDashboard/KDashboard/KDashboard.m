@@ -377,11 +377,11 @@
     _longPressGesture.delegate = self;
     _longPressGesture.numberOfTouchesRequired = 1;
     _longPressGesture.minimumPressDuration = DEFAULT_MINIMUM_PRESS_DURATION_TO_START_DRAGGING;
-    [_viewControllerEmbedder.view addGestureRecognizer:_longPressGesture];
+    [self.view addGestureRecognizer:_longPressGesture];
     
     _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     _panGesture.delegate = self;
-    [_viewControllerEmbedder.view addGestureRecognizer:_panGesture];
+    [self.view addGestureRecognizer:_panGesture];
 }
 
 -(void)removeGestures{
