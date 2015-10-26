@@ -492,6 +492,10 @@
         }
         
         if(CGRectContainsPoint([self.view convertRect:_leftSideSlidingDetectionZone.frame toView:_viewControllerEmbedder.view], point)){
+            [self cancelCanCreateAGroupTimer];
+            _canCreateGroup = NO;
+            _lastIndexWhereBeingAbleToCreateAGroup = -1;
+            
             if(_slidingWhileDraggingTimer == nil){
                 _slidingWhileDraggingTimer = [NSTimer scheduledTimerWithTimeInterval:_slidingPageWhileDraggingWaitingDuration
                                                                               target:self
@@ -500,6 +504,10 @@
                                                                              repeats:YES];
             }
         }else if(CGRectContainsPoint([self.view convertRect:_rightSideSlidingDetectionZone.frame toView:_viewControllerEmbedder.view], point)){
+            [self cancelCanCreateAGroupTimer];
+            _canCreateGroup = NO;
+            _lastIndexWhereBeingAbleToCreateAGroup = -1;
+            
             if(_slidingWhileDraggingTimer == nil){
                 _slidingWhileDraggingTimer = [NSTimer scheduledTimerWithTimeInterval:_slidingPageWhileDraggingWaitingDuration
                                                                               target:self
@@ -915,6 +923,10 @@
                     }
                     
                     //SOURCE DASHBOARD
+                    if(![[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:_sourceDashboard]){
+                        return;
+                    }
+                    
                     if([_sourceDashboard pageCount] < sourcePrevPageCount){
                         NSInteger loadViewControllerAtIndex = _sourceDashboard.pageIndex;
                         BOOL animated = NO;

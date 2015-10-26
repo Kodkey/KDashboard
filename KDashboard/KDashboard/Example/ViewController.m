@@ -201,6 +201,17 @@
     [effectiveDataArray insertObject:removedObject atIndex:destinationIndex];
 }
 
+-(void)dashboard:(KDashboard *)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex fromAnotherDashboard:(KDashboard *)anotherDashboard{
+    
+    NSMutableArray* groupDataArray = [[self getEffectiveDataArrayWithDashboard:dashboard] objectAtIndex:_indexOfTheOpenedGroup];
+    
+    NSMutableArray* sourceDataArray = anotherDashboard == _groupDashboard ? groupDataArray : _dataArray;
+    NSMutableArray* destinationDataArray = anotherDashboard == _groupDashboard ? _dataArray : groupDataArray;
+    
+    [destinationDataArray insertObject:[sourceDataArray objectAtIndex:sourceIndex] atIndex:destinationIndex];
+    [sourceDataArray removeObjectAtIndex:sourceIndex];
+}
+
 -(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     [effectiveDataArray removeObjectAtIndex:index];
