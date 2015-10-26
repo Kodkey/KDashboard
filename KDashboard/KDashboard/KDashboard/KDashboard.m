@@ -108,6 +108,8 @@
 }
 
 -(void) setDefaultOptions{
+    _bounces = YES;
+    
     _indexOfTheLastDraggedCellSource = -1;
     _movedDraggedCell = NO;
     
