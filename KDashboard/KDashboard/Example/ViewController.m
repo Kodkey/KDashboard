@@ -175,12 +175,16 @@
 }
 
 #pragma mark - DASHBOARD DELEGATE METHODS
--(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex{
+-(BOOL)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     [effectiveDataArray exchangeObjectAtIndex:sourceIndex withObjectAtIndex:destinationIndex];
+    
+    return YES;
 }
 
--(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex fromAnotherDashboard:(KDashboard*)anotherDashboard{
+-(BOOL)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex fromAnotherDashboard:(KDashboard*)anotherDashboard{
+    
+    if(destinationIndex == _indexOfTheOpenedGroup) return NO;
     
     NSMutableArray* groupDataArray = [[self getEffectiveDataArrayWithDashboard:dashboard] objectAtIndex:_indexOfTheOpenedGroup];
     
@@ -192,16 +196,20 @@
     [destinationDataArray replaceObjectAtIndex:destinationIndex withObject:buffer];
     
     _indexOfTheOpenedGroup = -1;
+    
+    return YES;
 }
 
--(void)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex{
+-(BOOL)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     id removedObject = [effectiveDataArray objectAtIndex:sourceIndex];
     [effectiveDataArray removeObjectAtIndex:sourceIndex];
     [effectiveDataArray insertObject:removedObject atIndex:destinationIndex];
+    
+    return YES;
 }
 
--(void)dashboard:(KDashboard *)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex fromAnotherDashboard:(KDashboard *)anotherDashboard{
+-(BOOL)dashboard:(KDashboard *)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex fromAnotherDashboard:(KDashboard *)anotherDashboard{
     
     NSMutableArray* groupDataArray = [[self getEffectiveDataArrayWithDashboard:dashboard] objectAtIndex:_indexOfTheOpenedGroup];
     
@@ -210,15 +218,19 @@
     
     [destinationDataArray insertObject:[sourceDataArray objectAtIndex:sourceIndex] atIndex:destinationIndex];
     [sourceDataArray removeObjectAtIndex:sourceIndex];
+    
+    return YES;
 }
 
--(void)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index{
+-(BOOL)dashboard:(KDashboard*)dashboard deleteCellAtIndex:(NSInteger)index{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     [effectiveDataArray removeObjectAtIndex:index];
     
     if(((CollectionViewCell*)[_mainDashboard cellAtDashboardIndex:_indexOfTheOpenedGroup]).isAGroup){
         [_mainDashboard reloadData];
     }
+    
+    return YES;
 }
 
 -(void)dashboard:(KDashboard*)dashboard userTappedOnACellAtThisIndex:(NSInteger)index{

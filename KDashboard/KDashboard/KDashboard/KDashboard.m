@@ -787,7 +787,14 @@
         if(_enableSwappingActionFromAnotherDashboard){
             if(_delegate != nil){
                 if([_delegate respondsToSelector:@selector(dashboard:swapCellAtIndex:withCellAtIndex:fromAnotherDashboard:)]){
-                    [_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex fromAnotherDashboard:_sourceDashboard];
+                    if(![_delegate dashboard:self swapCellAtIndex:sourceIndex withCellAtIndex:destinationIndex fromAnotherDashboard:_sourceDashboard]){
+                        if([[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:_sourceDashboard]){
+                            [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+                        }else{
+                            [_sourceDashboard hideDraggedCellWithCompletionBlock:nil];
+                        }
+                        return;
+                    }
                     
                     if(![[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:_sourceDashboard]){
                         
@@ -897,7 +904,15 @@
                     NSInteger prevPageCount = [self pageCount];
                     NSInteger sourcePrevPageCount = [_sourceDashboard pageCount];
                     
-                    [_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:destinationIndex fromAnotherDashboard:_sourceDashboard];
+                    if(![_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:destinationIndex fromAnotherDashboard:_sourceDashboard]){
+                        if([[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:_sourceDashboard]){
+                            [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+                        }else{
+                            [_sourceDashboard hideDraggedCellWithCompletionBlock:nil];
+                        }
+                        
+                        return;
+                    }
                     
                     //DESTINATION DASHBOARD
                     if([self pageCount] > prevPageCount){
@@ -979,7 +994,10 @@
     
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:insertCellFromIndex:toIndex:)]){
-            [_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:(sourceIndex < destinationIndex) ? destinationIndex-1 : destinationIndex];
+            if(![_delegate dashboard:self insertCellFromIndex:sourceIndex toIndex:(sourceIndex < destinationIndex) ? destinationIndex-1 : destinationIndex]){
+                [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+                return;
+            }
         }
     }
     
@@ -1040,7 +1058,10 @@
         if([_delegate respondsToSelector:@selector(dashboard:deleteCellAtIndex:)]){
             NSInteger prevPageCount = [self pageCount];
             
-            [_delegate dashboard:self deleteCellAtIndex:index];
+            if(![_delegate dashboard:self deleteCellAtIndex:index]){
+                [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+                return;
+            }
             
             if([self pageCount] < prevPageCount){
                 [self hideDraggedCellWithCompletionBlock:nil];
