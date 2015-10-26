@@ -132,7 +132,7 @@
     _pageViewController = [self createPageViewControllerWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height*(_showPageControl ? (float)PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE/100 : 1))];
     [self loadInitialViewControllerAtIndex:0 withAnimation:NO andDirection:UIPageViewControllerNavigationDirectionForward andCompletionBlock:nil];
     
-    [self setBounces:YES];
+    [self setBounces:_bounces];
     
     CGFloat asideZoneWidth = self.view.frame.size.width*ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE/100;
     _leftSideSlidingDetectionZone = [self createAsideDetectionZoneWithFrame:CGRectMake(0, 0, asideZoneWidth, self.view.frame.size.height)];
@@ -757,7 +757,7 @@
 /* SLIDING PAGES MANAGING */
 /**************************/
 -(void) slideToThePreviousPage{
-    if(_pageIndex <= 0){
+    if(_pageIndex <= 0 || _draggedCell == nil){
         if(_slidingWhileDraggingTimer != nil){
             [_slidingWhileDraggingTimer invalidate];
             _slidingWhileDraggingTimer = nil;
@@ -768,7 +768,7 @@
 }
 
 -(void) slideToTheNextPage{
-    if(_pageIndex >= [self pageCount]-1){
+    if(_pageIndex >= [self pageCount]-1 || _draggedCell == nil){
         if(_slidingWhileDraggingTimer != nil){
             [_slidingWhileDraggingTimer invalidate];
             _slidingWhileDraggingTimer = nil;
@@ -916,7 +916,7 @@
                             [_currentCollectionViewEmbedder.collectionView performBatchUpdates:^{
                                 [_currentCollectionViewEmbedder.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:destinationIndex%_onePageElementCount inSection:0]]];
                             }completion:^(BOOL finished){
-                                
+                                [_currentCollectionViewEmbedder.collectionView reloadData];
                             }];
                         }
                         [_sourceDashboard cancelDraggingAndMoveDraggedCellToThisDestinationPoint:[self.view convertPoint:[self cellAtDashboardIndex:destinationIndex].center toView:_viewControllerEmbedder.view] withCompletionBlock:nil];
@@ -924,6 +924,7 @@
                     
                     //SOURCE DASHBOARD
                     if(![[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:_sourceDashboard]){
+                        [_currentCollectionViewEmbedder.collectionView reloadData];
                         return;
                     }
                     
@@ -1127,13 +1128,6 @@
     }else{
         [self cancelDraggingAndGetDraggedCellBackToItsCellPosition];
     }
-}
-
-/********************/
-/* GESTURE DELEGATE */
-/********************/
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
-    return YES;
 }
 
 /********************/
