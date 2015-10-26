@@ -592,11 +592,6 @@
     [_viewControllerEmbedder.view addSubview:_draggedCell];
 }
 
--(void) showDraggedCellWithAnotherDraggedCell:(UIView*)anotherDraggedCell fromThisStartPoint:(CGPoint)startPoint{
-    _draggedCell = anotherDraggedCell;
-    _draggedCell.center = startPoint;
-}
-
 -(void) moveCellWithCellSource:(UICollectionViewCell*)cell toPreviousOrNextPage:(BOOL)previous withDestinationPoint:(CGPoint)destinationPoint{
     _bufferMovingCell = [cell snapshotViewAfterScreenUpdates:YES];
     cell.hidden = YES;
