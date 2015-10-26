@@ -35,17 +35,41 @@
 -(void)dashboard:(KDashboard *)dashboard canCreateGroupAtIndex:(NSInteger)index withSourceIndex:(NSInteger)sourceIndex;
 -(void)dismissGroupCreationPossibilityFromDashboard:(KDashboard*)dashboard;
 -(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex;
+
+-(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex fromAnotherDashboard:(KDashboard*)anotherDashboard;
+-(void)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex fromAnotherDashboard:(KDashboard*)anotherDashboard;
+-(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex fromAnotherDashboard:(KDashboard*)anotherDashboard;
 @end
 
 
 
 @interface KDashboard : UIViewController <UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate, UIScrollViewDelegate, CollectionViewEmbedderViewControllerDataSource, CollectionViewEmbedderViewControllerDelegate>
 
-@property (nonatomic, assign) id<KDashboardDataSource> dataSource;
-@property (nonatomic, assign) id<KDashboardDelegate> delegate;
-
 -(id) initWithFrame:(CGRect)frame andDataSource:(id<KDashboardDataSource>)dataSource andDelegate:(id<KDashboardDelegate>)delegate andCellClass:(Class)cellClass andReuseIdentifier:(NSString*)identifier andAssociateToThisViewController:(UIViewController*)viewController;
 -(void) display;
+
+-(void) associateADeleteZone:(UIView*)deleteZone;
+- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
+-(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
+-(void) reloadData;
+
+
+// USEFUL FOR DASHBOARD ITSELF ONLY //
+@property (nonatomic, weak) UIViewController* viewControllerEmbedder;
+@property (nonatomic, retain) UIView* draggedCell;
+@property (nonatomic) BOOL movedDraggedCell;
+
+@property (nonatomic) NSInteger indexOfTheLastDraggedCellSource;
+@property (nonatomic) BOOL insideDashboard;
+
+@property (nonatomic, weak) KDashboard* sourceDashboard;
+
+-(void) handlePress:(UILongPressGestureRecognizer*)gesture;
+-(void) handlePan:(UIPanGestureRecognizer*)gesture;
+
+@property (nonatomic) NSString* uid;
+//*********//
+
 
 // OPTIONS //
 @property (nonatomic) BOOL bounces;
@@ -58,15 +82,14 @@
 @property (nonatomic) BOOL enableInsertingAction;
 @property (nonatomic) BOOL enableGroupCreation;
 
-@property (nonatomic) CGFloat minimumPressDurationToStartDragging;
+@property (nonatomic) BOOL enableSwappingActionFromAnotherDashboard;
+@property (nonatomic) BOOL enableInsertingActionFromAnotherDashboard;
+@property (nonatomic) BOOL enableGroupCreationFromAnotherDashboard;
+
+@property (nonatomic) CGFloat minimumPressDurationToStartDragging;//shared by all dashboards
 @property (nonatomic) CGFloat slidingPageWhileDraggingWaitingDuration;
 @property (nonatomic) CGFloat minimumWaitingDurationToCreateAGroup;
 //*********//
 
--(void) associateADeleteZone:(UIView*)deleteZone;
-- (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
--(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
--(void) reloadData;
--(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard;
 
 @end

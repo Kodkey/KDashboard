@@ -54,6 +54,7 @@
     self.view.backgroundColor = [UIColor whiteColor];
     
     _mainDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*12.5/100, screenRect.size.width, screenRect.size.height*75/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
+    _mainDashboard.uid = @"MAIN";
     [_mainDashboard display];
     _mainDashboard.view.backgroundColor = [UIColor grayColor];
     
@@ -75,18 +76,13 @@
     _mainDashboard.view.userInteractionEnabled = NO;
     _indexOfTheOpenedGroup = groupIndex;
     
-    if(_groupDashboard != nil){
-        [_groupDashboard willMoveToParentViewController:nil];
-        [_groupDashboard.view removeFromSuperview];
-        [_groupDashboard removeFromParentViewController];
-    }
-    
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     _groupDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(screenRect.size.width*5/100, screenRect.size.height*15/100, screenRect.size.width*90/100, screenRect.size.height*70/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
-    [_groupDashboard display];
+    _groupDashboard.uid = @"GROUP";
     _groupDashboard.showPageControl = NO;
     _groupDashboard.enableGroupCreation = NO;
     _groupDashboard.bounces = NO;
+    [_groupDashboard display];
     
     _groupDashboard.view.backgroundColor = [UIColor lightGrayColor];
     _groupDashboard.view.layer.borderColor = [UIColor blackColor].CGColor;
@@ -109,7 +105,7 @@
 }
 
 -(void) closeGroupDashboard{
-    _indexOfTheOpenedGroup = -1;
+    //_indexOfTheOpenedGroup = -1;
     
     if(_groupDashboard != nil){
         [_groupDashboard willMoveToParentViewController:nil];
@@ -182,6 +178,20 @@
 -(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex{
     NSMutableArray* effectiveDataArray = [self getEffectiveDataArrayWithDashboard:dashboard];
     [effectiveDataArray exchangeObjectAtIndex:sourceIndex withObjectAtIndex:destinationIndex];
+}
+
+-(void)dashboard:(KDashboard*)dashboard swapCellAtIndex:(NSInteger)sourceIndex withCellAtIndex:(NSUInteger)destinationIndex fromAnotherDashboard:(KDashboard*)anotherDashboard{
+    
+    NSMutableArray* groupDataArray = [[self getEffectiveDataArrayWithDashboard:dashboard] objectAtIndex:_indexOfTheOpenedGroup];
+    
+    NSMutableArray* sourceDataArray = anotherDashboard == _groupDashboard ? groupDataArray : _dataArray;
+    NSMutableArray* destinationDataArray = anotherDashboard == _groupDashboard ? _dataArray : groupDataArray;
+    
+    id buffer = [sourceDataArray objectAtIndex:sourceIndex];
+    [sourceDataArray replaceObjectAtIndex:sourceIndex withObject:[destinationDataArray objectAtIndex:destinationIndex]];
+    [destinationDataArray replaceObjectAtIndex:destinationIndex withObject:buffer];
+    
+    _indexOfTheOpenedGroup = -1;
 }
 
 -(void)dashboard:(KDashboard*)dashboard insertCellFromIndex:(NSInteger)sourceIndex toIndex:(NSInteger)destinationIndex{
@@ -278,11 +288,10 @@
     [_dataArray removeObjectAtIndex:sourceIndex];
 }
 
--(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{/*
+-(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{
     if(dashboard == _groupDashboard){
-        [_groupDashboard passDraggedCellToAnotherDashboard:_mainDashboard];//TODO
         [self closeGroupDashboard];
-    }*/
+    }
 }
 
 @end

@@ -18,6 +18,7 @@
 		4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6810551BCD5423002D72E5 /* CollectionViewEmbedderViewController.m */; };
 		4D886FDC1BCE4AE500603800 /* CollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D886FDB1BCE4AE500603800 /* CollectionViewCell.m */; };
 		4D886FDE1BCE4DED00603800 /* imagecell.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D886FDD1BCE4DED00603800 /* imagecell.png */; };
+		4D8E989F1BDE6F4F00186180 /* KDashboardGestureManagerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D8E989E1BDE6F4F00186180 /* KDashboardGestureManagerViewController.m */; };
 		4D9FCAF31BD7DC9800BFB010 /* DotView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D9FCAF21BD7DC9800BFB010 /* DotView.m */; };
 		4D9FCAF61BD7DCCF00BFB010 /* GroupView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D9FCAF51BD7DCCF00BFB010 /* GroupView.m */; };
 /* End PBXBuildFile section */
@@ -53,6 +54,8 @@
 		4D886FDA1BCE4AE500603800 /* CollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionViewCell.h; sourceTree = "<group>"; };
 		4D886FDB1BCE4AE500603800 /* CollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionViewCell.m; sourceTree = "<group>"; };
 		4D886FDD1BCE4DED00603800 /* imagecell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imagecell.png; sourceTree = "<group>"; };
+		4D8E989D1BDE6F4F00186180 /* KDashboardGestureManagerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KDashboardGestureManagerViewController.h; sourceTree = "<group>"; };
+		4D8E989E1BDE6F4F00186180 /* KDashboardGestureManagerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KDashboardGestureManagerViewController.m; sourceTree = "<group>"; };
 		4D9FCAF11BD7DC9800BFB010 /* DotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DotView.h; sourceTree = "<group>"; };
 		4D9FCAF21BD7DC9800BFB010 /* DotView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DotView.m; sourceTree = "<group>"; };
 		4D9FCAF41BD7DCCF00BFB010 /* GroupView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupView.h; sourceTree = "<group>"; };
@@ -152,6 +155,8 @@
 		4D68104A1BCD5140002D72E5 /* KDashboard */ = {
 			isa = PBXGroup;
 			children = (
+				4D8E989D1BDE6F4F00186180 /* KDashboardGestureManagerViewController.h */,
+				4D8E989E1BDE6F4F00186180 /* KDashboardGestureManagerViewController.m */,
 				4D6810511BCD52F8002D72E5 /* KDashboard.h */,
 				4D6810521BCD52F8002D72E5 /* KDashboard.m */,
 				4D6810541BCD5423002D72E5 /* CollectionViewEmbedderViewController.h */,
@@ -273,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D886FDC1BCE4AE500603800 /* CollectionViewCell.m in Sources */,
+				4D8E989F1BDE6F4F00186180 /* KDashboardGestureManagerViewController.m in Sources */,
 				4D6810561BCD5423002D72E5 /* CollectionViewEmbedderViewController.m in Sources */,
 				4D6810501BCD51E4002D72E5 /* ViewController.m in Sources */,
 				4D68104D1BCD5185002D72E5 /* AppDelegate.m in Sources */,
