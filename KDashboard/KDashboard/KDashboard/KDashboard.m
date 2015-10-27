@@ -9,8 +9,6 @@
 #import "KDashboard.h"
 #import "KDashboardGestureManagerViewController.h"
 
-#define IS_IOS7 ([[[UIDevice currentDevice] systemVersion] floatValue] == 7.0)
-
 #define PAGE_VIEW_CONTROLLER_HEIGHT_PERCENTAGE 95.0
 #define ASIDE_SLIDING_DETECTION_ZONE_WIDTH_PERCENTAGE 6.0
 #define ASIDE_CELL_INSERTING_ZONE_WIDTH_PERCENTAGE 20.0
@@ -221,7 +219,7 @@
     
     NSArray *viewControllers = [NSArray arrayWithObject:initialViewController];
     
-    if(IS_IOS7){//bug fix in iOS7
+    if([[[UIDevice currentDevice] systemVersion] floatValue] == 7.0){//bug fix in iOS7
         __block KDashboard *blocksafeSelf = self;
         [_pageViewController setViewControllers:viewControllers direction:direction animated:YES completion:^(BOOL finished){
             if(finished)
