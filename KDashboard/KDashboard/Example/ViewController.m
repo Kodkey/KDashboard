@@ -248,7 +248,7 @@
 }
 
 -(void)dashboard:(KDashboard *)dashboard canCreateGroupAtIndex:(NSInteger)index withSourceIndex:(NSInteger)sourceIndex{
-    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup){
+    if(((CollectionViewCell*)[dashboard cellAtDashboardIndex:sourceIndex]).isAGroup || _indexOfTheOpenedGroup == index){
         _lastHollowingGroupCellIndex = -1;
         return;
     }

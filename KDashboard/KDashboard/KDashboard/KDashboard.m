@@ -1068,12 +1068,12 @@
 -(void)deleteCellAtIndex:(NSInteger)index{
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:deleteCellAtIndex:)]){
-            NSInteger prevPageCount = [self pageCount];
-            
             if(![_delegate dashboard:self deleteCellAtIndex:index]){
                 [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
                 return;
             }
+            
+            NSInteger prevPageCount = [self pageCount];
             
             if([self pageCount] < prevPageCount){
                 [self hideDraggedCellWithCompletionBlock:nil];

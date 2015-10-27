@@ -65,6 +65,7 @@
     
     _isAGroup = NO;
     _cellImageView.alpha = 1;
+    _cellLabel.alpha = 1;
     _groupView.alpha = 0;
 }
 
@@ -74,6 +75,7 @@
     
     _isAGroup = YES;
     _cellImageView.alpha = 0;
+    _cellLabel.alpha = 1;
     _groupView.alpha = 1;
 }
 
