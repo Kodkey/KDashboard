@@ -12,7 +12,7 @@
 
 #define ROW_COUNT 4
 #define COLUMN_COUNT 4
-#define CELL_COUNT 100
+#define CELL_COUNT 97
 
 #define CELL_NAME @"Cell"
 

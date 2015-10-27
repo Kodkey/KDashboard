@@ -216,6 +216,8 @@
 -(void) loadInitialViewControllerAtIndex:(NSInteger)index withAnimation:(BOOL)animated andDirection:(UIPageViewControllerNavigationDirection)direction andCompletionBlock:(void(^)(BOOL))completionBlock{
     CollectionViewEmbedderViewController* initialViewController = [self viewControllerAtIndex:index];
     _currentCollectionViewEmbedder = initialViewController;
+    _pageIndex = index;
+    _currentCollectionViewEmbedder.pageIndex = index;
     
     NSArray *viewControllers = [NSArray arrayWithObject:initialViewController];
     
@@ -545,7 +547,7 @@
                 return;
             }
         }else if(_deleteZones.count > 0){
-            for(UIView* aDeleteZone in _deleteZones){                
+            for(UIView* aDeleteZone in _deleteZones){
                 if(CGRectContainsPoint(aDeleteZone.frame, [gesture locationInView:_viewControllerEmbedder.view])){
                     [self deleteCellAtIndex:_indexOfTheLastDraggedCellSource];
                     return;
@@ -1068,12 +1070,12 @@
 -(void)deleteCellAtIndex:(NSInteger)index{
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:deleteCellAtIndex:)]){
+            NSInteger prevPageCount = [self pageCount];
+            
             if(![_delegate dashboard:self deleteCellAtIndex:index]){
                 [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
                 return;
             }
-            
-            NSInteger prevPageCount = [self pageCount];
             
             if([self pageCount] < prevPageCount){
                 [self hideDraggedCellWithCompletionBlock:nil];
@@ -1152,7 +1154,24 @@
     
     if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dashboard:addGroupAtIndex:withCellAtIndex:)]){
+            NSInteger prevPageCount = [self pageCount];
+            
             [_delegate dashboard:self addGroupAtIndex:index withCellAtIndex:sourceIndex];
+            
+            if([self pageCount] < prevPageCount){
+                [self hideDraggedCellWithCompletionBlock:nil];
+                
+                NSInteger loadViewControllerAtIndex = _pageIndex;
+                BOOL animated = NO;
+                if(_pageIndex == [self pageCount]){
+                    loadViewControllerAtIndex = _pageIndex-1;
+                    animated = YES;
+                }
+                
+                [self loadInitialViewControllerAtIndex:loadViewControllerAtIndex withAnimation:animated andDirection:UIPageViewControllerNavigationDirectionReverse andCompletionBlock:nil];
+                
+                return;
+            }
             
             [self hideDraggedCellWithCompletionBlock:nil];
         }else{
