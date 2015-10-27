@@ -545,8 +545,8 @@
                 return;
             }
         }else if(_deleteZones.count > 0){
-            for(UIView* aDeleteZone in _deleteZones){
-                if(CGRectContainsPoint(aDeleteZone.frame, [_currentCollectionViewEmbedder.collectionView convertPoint:droppingPoint toView:_viewControllerEmbedder.view])){
+            for(UIView* aDeleteZone in _deleteZones){                
+                if(CGRectContainsPoint(aDeleteZone.frame, [gesture locationInView:_viewControllerEmbedder.view])){
                     [self deleteCellAtIndex:_indexOfTheLastDraggedCellSource];
                     return;
                 }
