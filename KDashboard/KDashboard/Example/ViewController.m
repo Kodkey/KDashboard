@@ -54,7 +54,6 @@
     self.view.backgroundColor = [UIColor whiteColor];
     
     _mainDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(0, screenRect.size.height*12.5/100, screenRect.size.width, screenRect.size.height*75/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
-    _mainDashboard.uid = @"MAIN";
     [_mainDashboard display];
     _mainDashboard.view.backgroundColor = [UIColor grayColor];
     
@@ -80,7 +79,6 @@
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     _groupDashboard = [[KDashboard alloc] initWithFrame:CGRectMake(screenRect.size.width*5/100, screenRect.size.height*15/100, screenRect.size.width*90/100, screenRect.size.height*70/100) andDataSource:self andDelegate:self andCellClass:[CollectionViewCell class] andReuseIdentifier:CELL_NAME andAssociateToThisViewController:self];
-    _groupDashboard.uid = @"GROUP";
     _groupDashboard.showPageControl = NO;
     _groupDashboard.enableGroupCreation = NO;
     _groupDashboard.bounces = NO;
@@ -289,7 +287,7 @@
     }
     
     id data = [_dataArray objectAtIndex:index];
-    /*
+    
     if([data isKindOfClass:[NSArray class]]){
         NSMutableArray* groupDataArray = [NSMutableArray arrayWithArray:(NSArray*)data];
         [groupDataArray addObject:[_dataArray objectAtIndex:sourceIndex]];
@@ -297,7 +295,7 @@
         [_dataArray replaceObjectAtIndex:index withObject:groupDataArray];
     }else if([data isKindOfClass:[NSNumber class]]){
         [_dataArray insertObject:[NSMutableArray arrayWithObjects:[_dataArray objectAtIndex:sourceIndex],[_dataArray objectAtIndex:index], nil] atIndex:index];
-    }*/
+    }
     
     /*
     ^^^^^^^^^^
@@ -309,7 +307,7 @@
     vvvvvvvvvv
     */
     
-    if([data isKindOfClass:[NSArray class]]){
+    /*if([data isKindOfClass:[NSArray class]]){
         NSMutableArray* groupDataArray = [NSMutableArray arrayWithArray:(NSArray*)data];
         [groupDataArray addObject:[_dataArray objectAtIndex:sourceIndex]];
         [_dataArray replaceObjectAtIndex:index withObject:groupDataArray];
@@ -317,7 +315,7 @@
         [_dataArray replaceObjectAtIndex:index withObject:[NSMutableArray arrayWithObjects:[_dataArray objectAtIndex:sourceIndex],[_dataArray objectAtIndex:index], nil]];
         
     }
-    [_dataArray removeObjectAtIndex:sourceIndex];
+    [_dataArray removeObjectAtIndex:sourceIndex];*/
 }
 
 -(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex fromAnotherDashboard:(KDashboard*)anotherDashboard{
@@ -327,12 +325,12 @@
     NSMutableArray* sourceDataArray = anotherDashboard == _groupDashboard ? groupDataArray : _dataArray;
     NSMutableArray* destinationDataArray = anotherDashboard == _groupDashboard ? _dataArray : groupDataArray;
     
-    /*if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
+    if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
         NSMutableArray* destinationGroupDataArray = (NSMutableArray*)[destinationDataArray objectAtIndex:index];
         [destinationGroupDataArray addObject:[sourceDataArray objectAtIndex:sourceIndex]];
     }else{
         [destinationDataArray insertObject:[NSMutableArray arrayWithObjects:[sourceDataArray objectAtIndex:sourceIndex],[destinationDataArray objectAtIndex:index], nil] atIndex:index];
-    }*/
+    }
     
     /*
     ^^^^^^^^^^
@@ -344,13 +342,13 @@
     vvvvvvvvvv
     */
     
-    if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
+    /*if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
         NSMutableArray* destinationGroupDataArray = (NSMutableArray*)[destinationDataArray objectAtIndex:index];
         [destinationGroupDataArray addObject:[sourceDataArray objectAtIndex:sourceIndex]];
     }else{
         [destinationDataArray replaceObjectAtIndex:index withObject:[NSMutableArray arrayWithObjects:[sourceDataArray objectAtIndex:sourceIndex],[destinationDataArray objectAtIndex:index], nil]];
     }
-    [sourceDataArray removeObjectAtIndex:sourceIndex];
+    [sourceDataArray removeObjectAtIndex:sourceIndex];*/
 }
 
 -(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{

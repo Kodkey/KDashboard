@@ -69,8 +69,6 @@
 -(void) handlePress:(UILongPressGestureRecognizer*)gesture;
 -(void) handlePan:(UIPanGestureRecognizer*)gesture;
 -(void) cancelCanCreateAGroupTimer;
-
-@property (nonatomic) NSString* uid;
 //*********//
 
 
