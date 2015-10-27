@@ -299,13 +299,15 @@
         [_dataArray insertObject:[NSMutableArray arrayWithObjects:[_dataArray objectAtIndex:sourceIndex],[_dataArray objectAtIndex:index], nil] atIndex:index];
     }*/
     
-    //^^^^^^^^^^
-    //KEEP SUBELEMENTS IN THE DASHBOARD AND COPY THEM TO THE GROUP
+    /*
+    ^^^^^^^^^^
+    KEEP SUBELEMENTS IN THE DASHBOARD AND COPY THEM TO THE GROUP
     
-    //OR
+    OR
     
-    //DELETE ELEMENTS FROM DASHBOARD AND ADD THEM TO THE GROUP
-    //vvvvvvvvvv
+    DELETE ELEMENTS FROM DASHBOARD AND ADD THEM TO THE GROUP
+    vvvvvvvvvv
+    */
     
     if([data isKindOfClass:[NSArray class]]){
         NSMutableArray* groupDataArray = [NSMutableArray arrayWithArray:(NSArray*)data];
@@ -332,13 +334,15 @@
         [destinationDataArray insertObject:[NSMutableArray arrayWithObjects:[sourceDataArray objectAtIndex:sourceIndex],[destinationDataArray objectAtIndex:index], nil] atIndex:index];
     }*/
     
-    //^^^^^^^^^^
-    //KEEP SUBELEMENTS IN THE DASHBOARD AND COPY THEM TO THE GROUP
+    /*
+    ^^^^^^^^^^
+    KEEP SUBELEMENTS IN THE DASHBOARD AND COPY THEM TO THE GROUP
     
-    //OR
+    OR
     
-    //DELETE ELEMENTS FROM DASHBOARD AND ADD THEM TO THE GROUP
-    //vvvvvvvvvv
+    DELETE ELEMENTS FROM DASHBOARD AND ADD THEM TO THE GROUP
+    vvvvvvvvvv
+    */
     
     if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
         NSMutableArray* destinationGroupDataArray = (NSMutableArray*)[destinationDataArray objectAtIndex:index];
