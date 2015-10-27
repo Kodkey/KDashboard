@@ -537,7 +537,8 @@
         
         if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath] && _insideDashboard){
             if(_enableGroupCreation && CFAbsoluteTimeGetCurrent()-_lastTimeDragChangedState > _minimumWaitingDurationToCreateAGroup && [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] != _indexOfTheLastDraggedCellSource){
-                [self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_indexOfTheLastDraggedCellSource];
+                //[self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_indexOfTheLastDraggedCellSource];
+                [self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_sourceDashboard == nil ? _indexOfTheLastDraggedCellSource : _sourceDashboard.indexOfTheLastDraggedCellSource];
                 return;
             }else if(_enableInsertingAction && ([self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint]||[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint])){
                 [self insertCellFromIndex:_sourceDashboard == nil ? _indexOfTheLastDraggedCellSource : _sourceDashboard.indexOfTheLastDraggedCellSource toIndex:[self getDashboardIndexWithIndexPath:indexPath]+(int)[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint]];
@@ -1144,7 +1145,7 @@
 
 //CREATE_GROUP
 -(void) addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex{
-    if(_canCreateGroup && _delegate != nil){
+    if(_delegate != nil){
         if([_delegate respondsToSelector:@selector(dismissGroupCreationPossibilityFromDashboard:)]){
             [_delegate dismissGroupCreationPossibilityFromDashboard:self];
         }
@@ -1153,6 +1154,38 @@
     }
     
     if(_delegate != nil){
+        if(_sourceDashboard != nil){
+            if(_enableGroupCreationFromAnotherDashboard){
+                if([_delegate respondsToSelector:@selector(dashboard:addGroupAtIndex:withCellAtIndex:fromAnotherDashboard:)]){
+                    NSInteger prevPageCount = [self pageCount];
+                    
+                    [_delegate dashboard:self addGroupAtIndex:index withCellAtIndex:sourceIndex fromAnotherDashboard:_sourceDashboard];
+                    
+                    if([self pageCount] < prevPageCount){
+                        [self hideDraggedCellWithCompletionBlock:nil];
+                        
+                        NSInteger loadViewControllerAtIndex = _pageIndex;
+                        BOOL animated = NO;
+                        if(_pageIndex == [self pageCount]){
+                            loadViewControllerAtIndex = _pageIndex-1;
+                            animated = YES;
+                        }
+                        
+                        [self loadInitialViewControllerAtIndex:loadViewControllerAtIndex withAnimation:animated andDirection:UIPageViewControllerNavigationDirectionReverse andCompletionBlock:nil];
+                        
+                        return;
+                    }
+                    
+                    [self hideDraggedCellWithCompletionBlock:nil];
+                    
+                    return;
+                }
+            }
+            [_sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+            
+            return;
+        }
+        
         if([_delegate respondsToSelector:@selector(dashboard:addGroupAtIndex:withCellAtIndex:)]){
             NSInteger prevPageCount = [self pageCount];
             

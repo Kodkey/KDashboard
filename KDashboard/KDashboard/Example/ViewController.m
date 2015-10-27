@@ -12,7 +12,7 @@
 
 #define ROW_COUNT 4
 #define COLUMN_COUNT 4
-#define CELL_COUNT 97
+#define CELL_COUNT 100
 
 #define CELL_NAME @"Cell"
 
@@ -316,6 +316,37 @@
         
     }
     [_dataArray removeObjectAtIndex:sourceIndex];
+}
+
+-(void)dashboard:(KDashboard*)dashboard addGroupAtIndex:(NSInteger)index withCellAtIndex:(NSInteger)sourceIndex fromAnotherDashboard:(KDashboard*)anotherDashboard{
+    
+    NSMutableArray* groupDataArray = [[self getEffectiveDataArrayWithDashboard:dashboard] objectAtIndex:_indexOfTheOpenedGroup];
+    
+    NSMutableArray* sourceDataArray = anotherDashboard == _groupDashboard ? groupDataArray : _dataArray;
+    NSMutableArray* destinationDataArray = anotherDashboard == _groupDashboard ? _dataArray : groupDataArray;
+    
+    /*if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
+        NSMutableArray* destinationGroupDataArray = (NSMutableArray*)[destinationDataArray objectAtIndex:index];
+        [destinationGroupDataArray addObject:[sourceDataArray objectAtIndex:sourceIndex]];
+    }else{
+        [destinationDataArray insertObject:[NSMutableArray arrayWithObjects:[sourceDataArray objectAtIndex:sourceIndex],[destinationDataArray objectAtIndex:index], nil] atIndex:index];
+    }*/
+    
+    //^^^^^^^^^^
+    //KEEP SUBELEMENTS IN THE DASHBOARD AND COPY THEM TO THE GROUP
+    
+    //OR
+    
+    //DELETE ELEMENTS FROM DASHBOARD AND ADD THEM TO THE GROUP
+    //vvvvvvvvvv
+    
+    if([[destinationDataArray objectAtIndex:index] isKindOfClass:[NSArray class]]){
+        NSMutableArray* destinationGroupDataArray = (NSMutableArray*)[destinationDataArray objectAtIndex:index];
+        [destinationGroupDataArray addObject:[sourceDataArray objectAtIndex:sourceIndex]];
+    }else{
+        [destinationDataArray replaceObjectAtIndex:index withObject:[NSMutableArray arrayWithObjects:[sourceDataArray objectAtIndex:sourceIndex],[destinationDataArray objectAtIndex:index], nil]];
+    }
+    [sourceDataArray removeObjectAtIndex:sourceIndex];
 }
 
 -(void)dashboard:(KDashboard *)dashboard userDraggedCellOutsideDashboard:(UIView *)draggedCell{
