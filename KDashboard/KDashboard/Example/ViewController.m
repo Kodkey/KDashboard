@@ -73,7 +73,9 @@
 
 #pragma mark - GROUP MANAGING
 -(void) createAndShowGroupDashboardWithGroupIndex:(NSInteger)groupIndex{
+    _mainDashboard.enableDragAndDrop = NO;
     _mainDashboard.view.userInteractionEnabled = NO;
+    
     _indexOfTheOpenedGroup = groupIndex;
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -100,19 +102,24 @@
     
     [_groupDashboard associateADeleteZone:_deleteZone];
     
-    [_groupDashboard.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(closeGroupDashboard)]];
+    [_groupDashboard.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(closeGroupNow)]];
     
 }
 
--(void) closeGroupDashboard{
-    //_indexOfTheOpenedGroup = -1;
+-(void) closeGroupNow{
+    [self closeGroupDashboard];
     
+    _indexOfTheOpenedGroup = -1;
+}
+
+-(void) closeGroupDashboard{
     if(_groupDashboard != nil){
         [_groupDashboard willMoveToParentViewController:nil];
         [_groupDashboard.view removeFromSuperview];
         [_groupDashboard removeFromParentViewController];
     }
     
+    _mainDashboard.enableDragAndDrop = YES;
     _mainDashboard.view.userInteractionEnabled = YES;
 }
 

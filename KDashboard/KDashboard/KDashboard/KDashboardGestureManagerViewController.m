@@ -19,6 +19,7 @@
 @property (nonatomic, retain) NSMutableArray* dashboards;
 
 @property (nonatomic, weak) KDashboard* sourceDashboard;
+@property (nonatomic, weak) KDashboard* lastTargetedDashboard;
 
 @end
 
@@ -61,19 +62,19 @@
 -(void) unregisterDashboardForDragAndDrop:(KDashboard*)dashboard{
     if([_dashboards containsObject:dashboard]){
         [_dashboards removeObject:dashboard];
-        
-        [self removeViewControllerFromParentViewController:dashboard];
-        
-        if(_dashboards.count == 0){
-            [self removeViewControllerFromParentViewController:self];
-        }
     }
 }
 
+-(void) dissociateADashboard:(KDashboard*)dashboard{
+    [self removeViewControllerFromParentViewController:dashboard];
+}
+
 -(void) add:(UIViewController*)viewController toParentViewController:(UIViewController*)parentViewController{
-    [parentViewController addChildViewController:viewController];
-    [parentViewController.view addSubview:viewController.view];
-    [viewController didMoveToParentViewController:parentViewController];
+    if(![parentViewController.view.subviews containsObject:viewController.view]){
+        [parentViewController addChildViewController:viewController];
+        [parentViewController.view addSubview:viewController.view];
+        [viewController didMoveToParentViewController:parentViewController];
+    }
 }
 
 -(void) removeViewControllerFromParentViewController:(UIViewController*)viewController{
@@ -106,12 +107,17 @@
             _sourceDashboard = targetedDashboard;
         }
         
-        [targetedDashboard handlePress:gesture];
+        if(targetedDashboard.enableDragAndDrop)[targetedDashboard handlePress:gesture];
     }
 }
 
 -(void) handlePan:(UIPanGestureRecognizer*)gesture{
     KDashboard* targetedDashboard = [[self dashboardsUnderPoint:[gesture locationInView:self.view]] lastObject];
+    
+    if(targetedDashboard != _lastTargetedDashboard){
+        [_lastTargetedDashboard cancelCanCreateAGroupTimer];
+    }
+    _lastTargetedDashboard = targetedDashboard;
     
     if((gesture.state == UIGestureRecognizerStateRecognized || gesture.state == UIGestureRecognizerStateChanged) && targetedDashboard != nil && targetedDashboard != _sourceDashboard){
         targetedDashboard.draggedCell = _sourceDashboard.draggedCell;
@@ -124,7 +130,7 @@
         targetedDashboard.sourceDashboard = nil;
     }
     
-    if(targetedDashboard != nil)[targetedDashboard handlePan:gesture];
+    if(targetedDashboard != nil && targetedDashboard.enableDragAndDrop)[targetedDashboard handlePan:gesture];
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {

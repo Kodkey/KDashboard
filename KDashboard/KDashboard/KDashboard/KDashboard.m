@@ -27,7 +27,7 @@
 
 @interface KDashboard ()
 
-@property (nonatomic, weak) UIView* deleteZone;
+@property (nonatomic, retain) NSMutableArray* deleteZones;
 @property (nonatomic, retain) UIView* bufferMovingCell;
 
 @property (nonatomic, assign) id<KDashboardDataSource> dataSource;
@@ -77,6 +77,8 @@
         _cellClass = cellClass;
         _identifier = identifier;
         _viewControllerEmbedder = viewController;
+        
+        _deleteZones = [[NSMutableArray alloc] init];
         
         [self.view setFrame:frame];
     }
@@ -476,7 +478,7 @@
                     _lastIndexWhereBeingAbleToCreateAGroup = -1;
                 }
             }
-            if(ABS(point.x-_lastTouchPoint.x)+ABS(point.y-_lastTouchPoint.y) > DISMISS_GROUP_CREATION_SENSIBILITY || _lastIndexWhereBeingAbleToCreateAGroup != [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture]){
+            if(ABS(point.x-_lastTouchPoint.x)+ABS(point.y-_lastTouchPoint.y) > DISMISS_GROUP_CREATION_SENSIBILITY || _lastIndexWhereBeingAbleToCreateAGroup != [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] || !_insideDashboard){
                 _lastTimeDragChangedState = CFAbsoluteTimeGetCurrent();
                 
                 [self cancelCanCreateAGroupTimer];
@@ -525,6 +527,8 @@
     
     if(gesture.state == UIGestureRecognizerStateRecognized){
         [self cancelCanCreateAGroupTimer];
+        _canCreateGroup = NO;
+        _lastIndexWhereBeingAbleToCreateAGroup = -1;
         CGPoint droppingPoint = [gesture locationInView:_currentCollectionViewEmbedder.collectionView];
         NSIndexPath* indexPath = [_currentCollectionViewEmbedder.collectionView indexPathForItemAtPoint:droppingPoint];
         UICollectionViewCell* targetedCell = [self getCellAtDashboardIndex:[self getDashboardIndexWithIndexPath:indexPath]];
@@ -540,10 +544,12 @@
                 [self swapCellAtIndex:_sourceDashboard == nil ? _indexOfTheLastDraggedCellSource : _sourceDashboard.indexOfTheLastDraggedCellSource withCellAtIndex:[self getDashboardIndexWithIndexPath:indexPath]];
                 return;
             }
-        }else if(_deleteZone != nil){
-            if(CGRectContainsPoint(_deleteZone.frame, [_currentCollectionViewEmbedder.collectionView convertPoint:droppingPoint toView:_viewControllerEmbedder.view])){
-                [self deleteCellAtIndex:_indexOfTheLastDraggedCellSource];
-                return;
+        }else if(_deleteZones.count > 0){
+            for(UIView* aDeleteZone in _deleteZones){
+                if(CGRectContainsPoint(aDeleteZone.frame, [_currentCollectionViewEmbedder.collectionView convertPoint:droppingPoint toView:_viewControllerEmbedder.view])){
+                    [self deleteCellAtIndex:_indexOfTheLastDraggedCellSource];
+                    return;
+                }
             }
         }
     }
@@ -689,7 +695,11 @@
 }
 
 -(void) cancelDraggingAndGetDraggedCellBackToItsCellPosition{
-    [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:_indexOfTheLastDraggedCellSource];
+    if(![[KDashboardGestureManagerViewController sharedManager] knowsThisDashboard:self]){
+        [self hideDraggedCellWithCompletionBlock:nil];
+    }else{
+        [self cancelDraggingAndMoveDraggedCellToThisDashboardIndex:_indexOfTheLastDraggedCellSource];
+    }
 }
 
 -(void) cancelDraggingAndMoveDraggedCellToThisDashboardIndex:(NSInteger)index{
@@ -1253,7 +1263,19 @@
 /* USER METHODS */
 /****************/
 -(void) associateADeleteZone:(UIView*)deleteZone{
-    _deleteZone = deleteZone;
+    if(![_deleteZones containsObject:deleteZone]){
+        [_deleteZones addObject:deleteZone];
+    }
+}
+
+-(void) removeADeleteZone:(UIView*)deleteZone{
+    if([_deleteZones containsObject:deleteZone]){
+        [_deleteZones removeObject:deleteZone];
+    }
+}
+
+-(void) removeAllDeleteZones{
+    [_deleteZones removeAllObjects];
 }
 
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index{

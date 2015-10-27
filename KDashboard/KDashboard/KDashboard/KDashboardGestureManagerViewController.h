@@ -15,6 +15,7 @@
 
 -(void) registerDashboardForDragAndDrop:(KDashboard*)dashboard;
 -(void) unregisterDashboardForDragAndDrop:(KDashboard*)dashboard;
+-(void) dissociateADashboard:(KDashboard*)dashboard;
 
 -(BOOL)knowsThisDashboard:(KDashboard*)dashboard;
 
