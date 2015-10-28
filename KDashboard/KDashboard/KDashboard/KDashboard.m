@@ -1354,4 +1354,8 @@
     [_currentCollectionViewEmbedder.collectionView reloadData];
 }
 
+-(void) dealloc{
+    NSLog(@"dealloc");
+}
+
 @end
