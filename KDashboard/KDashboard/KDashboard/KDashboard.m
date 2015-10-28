@@ -90,7 +90,7 @@
     }
     
     [self layoutSubviews];
-    if(_enableDragAndDrop)[self setUpGestures];
+    //[self setUpGestures];
     
     NSInteger maxColumnCount, maxRowCount;
     if([_dataSource rowCountPerPageInDashboard:self] == 0 && [_dataSource columnCountPerPageInDashboard:self] == 0){
@@ -149,8 +149,6 @@
     [_viewControllerEmbedder addChildViewController:self];
     [_viewControllerEmbedder.view addSubview:self.view];
     [self didMoveToParentViewController:_viewControllerEmbedder];
-    
-    if(_enableDragAndDrop)[[KDashboardGestureManagerViewController sharedManager] registerDashboardForDragAndDrop:self];
 }
 
 -(void) removeUIElementsFromSuperview{
@@ -164,12 +162,32 @@
     if(_pageControl != nil)[_pageControl removeFromSuperview];
     
     [[KDashboardGestureManagerViewController sharedManager] unregisterDashboardForDragAndDrop:self];
+    [[KDashboardGestureManagerViewController sharedManager] dissociateADashboard:self];
+}
+
+-(void) viewDidLoad{
+    [super viewDidLoad];
+    
+    _viewControllerEmbedder.automaticallyAdjustsScrollViewInsets = NO;
+}
+
+-(void) viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
+    [[KDashboardGestureManagerViewController sharedManager] registerDashboardForDragAndDrop:self];
 }
 
 -(void) viewDidDisappear:(BOOL)animated{
     [super viewDidDisappear:animated];
     
     [[KDashboardGestureManagerViewController sharedManager] unregisterDashboardForDragAndDrop:self];
+    [[KDashboardGestureManagerViewController sharedManager] dissociateADashboard:self];
+    
+    if(![[KDashboardGestureManagerViewController sharedManager] isStillThereAVisibleDashboard]){
+        [_viewControllerEmbedder addChildViewController:self];
+        [_viewControllerEmbedder.view addSubview:self.view];
+        [self didMoveToParentViewController:_viewControllerEmbedder];
+    }
 }
 
 /************************/
@@ -386,14 +404,6 @@
 /*********************/
 /* GESTURES MANAGING */
 /*********************/
-- (void)setUpGestures{
-    [[KDashboardGestureManagerViewController sharedManager] registerDashboardForDragAndDrop:self];
-}
-
--(void)removeGestures{
-    [[KDashboardGestureManagerViewController sharedManager] unregisterDashboardForDragAndDrop:self];
-}
-
 - (void)handlePress:(UILongPressGestureRecognizer *)gesture{
     
     if(gesture.state == UIGestureRecognizerStateBegan){
@@ -535,7 +545,6 @@
         
         if(indexPath != nil && _indexOfTheLastDraggedCellSource != [self getDashboardIndexWithIndexPath:indexPath] && _insideDashboard){
             if(_enableGroupCreation && CFAbsoluteTimeGetCurrent()-_lastTimeDragChangedState > _minimumWaitingDurationToCreateAGroup && [self getDashboardCellIndexUnderDraggedCellWithGesture:gesture] != _indexOfTheLastDraggedCellSource){
-                //[self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_indexOfTheLastDraggedCellSource];
                 [self addGroupAtIndex:[self getDashboardIndexWithIndexPath:indexPath] withCellAtIndex:_sourceDashboard == nil ? _indexOfTheLastDraggedCellSource : _sourceDashboard.indexOfTheLastDraggedCellSource];
                 return;
             }else if(_enableInsertingAction && ([self isInsertingToTheLeftOfThisCell:targetedCell atThisPoint:droppingPoint]||[self isInsertingToTheRightOfThisCell:targetedCell atThisPoint:droppingPoint])){
@@ -558,6 +567,11 @@
     if(gesture.state == UIGestureRecognizerStateCancelled || gesture.state == UIGestureRecognizerStateEnded|| gesture.state == UIGestureRecognizerStateFailed || gesture.state == UIGestureRecognizerStateRecognized){
         
         [_sourceDashboard == nil ? self : _sourceDashboard cancelDraggingAndGetDraggedCellBackToItsCellPosition];
+        
+        if(_slidingWhileDraggingTimer != nil){
+            [_slidingWhileDraggingTimer invalidate];
+            _slidingWhileDraggingTimer = nil;
+        }
     }
 }
 
@@ -833,7 +847,7 @@
                     
                     NSInteger pageIndexOfSourceCell = [_sourceDashboard pageOfThisIndex:sourceIndex];
                     NSInteger currentPageIndexOfSourceDashboard = _sourceDashboard.pageIndex;
-                        
+                    
                     if(pageIndexOfSourceCell != currentPageIndexOfSourceDashboard){
                         [self moveCellWithCellSource:[self cellAtDashboardIndex:destinationIndex] toPreviousOrNextPage:(pageIndexOfSourceCell < currentPageIndexOfSourceDashboard) withDestinationPoint:[_sourceDashboard.view convertPoint:_sourceDashboard.memorizedDraggedCellSourceCenter toView:self.view]];
                         [_sourceDashboard cancelDraggingAndMoveDraggedCellToThisDestinationPoint:[self.view convertPoint:[self cellAtDashboardIndex:destinationIndex].center toView:_viewControllerEmbedder.view] withCompletionBlock:nil];
@@ -1276,9 +1290,9 @@
 -(void) setEnableDragAndDrop:(BOOL)enableDragAndDrop{
     _enableDragAndDrop = enableDragAndDrop;
     if(enableDragAndDrop){
-        [self setUpGestures];
+        [[KDashboardGestureManagerViewController sharedManager] registerDashboardForDragAndDrop:self];
     }else{
-        [self removeGestures];
+        [[KDashboardGestureManagerViewController sharedManager] unregisterDashboardForDragAndDrop:self];
     }
 }
 

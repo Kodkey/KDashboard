@@ -18,6 +18,7 @@
 -(void) dissociateADashboard:(KDashboard*)dashboard;
 
 -(BOOL)knowsThisDashboard:(KDashboard*)dashboard;
+-(BOOL)isStillThereAVisibleDashboard;
 
 -(void) setMinimumPressDurationToStartDragging:(CGFloat)minimumPressDuration;
 

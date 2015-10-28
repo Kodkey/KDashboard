@@ -153,4 +153,11 @@
     return [_dashboards containsObject:dashboard];
 }
 
+-(BOOL)isStillThereAVisibleDashboard{
+    for(KDashboard* aDashboard in _dashboards){
+        if(aDashboard.view.window) return YES;
+    }
+    return NO;
+}
+
 @end
