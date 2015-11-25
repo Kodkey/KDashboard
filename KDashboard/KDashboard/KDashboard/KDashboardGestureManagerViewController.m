@@ -53,6 +53,7 @@
         
         if(_dashboards.count == 1){
             [self add:self toParentViewController:dashboard.viewControllerEmbedder];
+            [dashboard.viewControllerEmbedder.view sendSubviewToBack:self.view];
         }
         
         [self add:dashboard toParentViewController:self];
