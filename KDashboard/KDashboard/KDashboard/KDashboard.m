@@ -1091,6 +1091,21 @@
 
 -(void) reloadData{
     [_currentCollectionViewEmbedder.collectionView reloadData];
+    
+    NSInteger loadViewControllerAtIndex = _pageIndex;
+    BOOL animated = NO;
+    if(_pageIndex == [self pageCount]){
+        loadViewControllerAtIndex = _pageIndex-1;
+        animated = YES;
+    }
+    
+    [self loadInitialViewControllerAtIndex:loadViewControllerAtIndex withAnimation:animated andDirection:UIPageViewControllerNavigationDirectionReverse andCompletionBlock:nil];
+}
+
+-(void) reloadDataAtDashboardIndex:(NSInteger)index{
+    if([self pageOfThisIndex:index] == _pageIndex){
+        [_currentCollectionViewEmbedder.collectionView reloadItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:index%_onePageElementCount inSection:0]]];
+    }
 }
 
 -(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard{
