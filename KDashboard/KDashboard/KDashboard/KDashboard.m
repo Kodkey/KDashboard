@@ -1092,14 +1092,16 @@
 -(void) reloadData{
     [_currentCollectionViewEmbedder.collectionView reloadData];
     
-    NSInteger loadViewControllerAtIndex = _pageIndex;
-    BOOL animated = NO;
-    if(_pageIndex == [self pageCount]){
-        loadViewControllerAtIndex = _pageIndex-1;
-        animated = YES;
+    if([_dataSource cellCountInDashboard:self] > 1){
+        NSInteger loadViewControllerAtIndex = _pageIndex;
+        BOOL animated = NO;
+        if(_pageIndex == [self pageCount]){
+            loadViewControllerAtIndex = _pageIndex-1;
+            animated = YES;
+        }
+        
+        [self loadInitialViewControllerAtIndex:loadViewControllerAtIndex withAnimation:animated andDirection:UIPageViewControllerNavigationDirectionReverse andCompletionBlock:nil];
     }
-    
-    [self loadInitialViewControllerAtIndex:loadViewControllerAtIndex withAnimation:animated andDirection:UIPageViewControllerNavigationDirectionReverse andCompletionBlock:nil];
 }
 
 -(void) reloadDataAtDashboardIndex:(NSInteger)index{
