@@ -86,6 +86,12 @@
     return self;
 }
 
+-(void) viewDidLoad{
+    [super viewDidLoad];
+    
+    _viewControllerEmbedder.automaticallyAdjustsScrollViewInsets = NO;
+}
+
 -(void) display{
     _onePageElementCount = [_dataSource rowCountPerPageInDashboard:self]*[_dataSource columnCountPerPageInDashboard:self];
     if(_onePageElementCount == 0){
