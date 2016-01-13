@@ -1129,8 +1129,4 @@
     }
 }
 
--(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard{
-    //TODO
-}
-
 @end
