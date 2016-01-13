@@ -67,6 +67,5 @@
 - (id)dequeueReusableCellWithIdentifier:(NSString *)identifier forIndex:(NSInteger)index;
 -(UICollectionViewCell*)cellAtDashboardIndex:(NSInteger)index;
 -(void) reloadData;
--(void) passDraggedCellToAnotherDashboard:(KDashboard*)dashboard;
 
 @end
