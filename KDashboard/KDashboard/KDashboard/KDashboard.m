@@ -296,6 +296,19 @@
                 _pageControl.numberOfPages = 0;
             }
         }
+        if(_bounces){
+            if([self pageCount] != 1){
+                _theScrollView.delegate = nil;
+                _theScrollView = nil;
+            }else{
+                for(UIView* subview in _pageViewController.view.subviews){
+                    if([subview isKindOfClass:[UIScrollView class]]){
+                        _theScrollView = (UIScrollView*)subview;
+                        _theScrollView.delegate = self;
+                    }
+                }
+            }
+        }
     }
 }
 
