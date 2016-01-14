@@ -14,6 +14,8 @@ https://appetize.io/app/cgk7zpc5a2x163dr47qrkerxmw
 
 ## Usage
 
+ Well I will describe my object usage as simple as possible:
+
   To use KDashboard, you have to :
   * Import KDashboard and CollectionViewEmbedderViewController classes to your project.
   * Prepare an UICollectionViewCell subclass to display in the KDashboard.
@@ -60,6 +62,20 @@ with:
 -(NSUInteger)columnCountPerPageInDashboard:(KDashboard*)dashboard;
 -(NSUInteger)cellCountInDashboard:(KDashboard*)dashboard;
 -(UICollectionViewCell*)dashboard:(KDashboard*)dashboard cellForItemAtIndex:(NSUInteger)index;
+```
+
+Here is what can look like the dashboard:cellForItemAtIndex method:
+
+```objective-c
+-(CollectionViewCell*)dashboard:(KDashboard*)dashboard cellForItemAtIndex:(NSUInteger)index{
+    CollectionViewCell* cell = nil; //cell is your custom UICollectionViewCell subclass
+
+    cell = (CollectionViewCell*) [dashboard dequeueReusableCellWithIdentifier:CELL_NAME forIndex:index]; //CELL_NAME here is the same String you put when creating your KDashboard
+
+    [cell customizeWithImage:[UIImage imageNamed:@"imagecell.png"] andText:[NSString stringWithFormat:@"cell%d",value]]; //after dequeueing your cell with the previous method, you have to customize it
+    
+    return cell; // return your new cell
+}
 ```
 
   * Implement KDashboardDelegate methods you want :
