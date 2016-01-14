@@ -12,6 +12,8 @@ https://appetize.io/app/cgk7zpc5a2x163dr47qrkerxmw
   * deleting cells
   * creating groups with two cells
 
+  To do so, you have to long-press cells to start dragging them. Then you can drop them wherever you want. This will perform a specific action according to where you drop it and how long dragged it over an another cell. Remember, this work like an iOS/Android main screen
+
 ## Usage
 
  Well I will describe my object usage as simple as possible:
