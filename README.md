@@ -1,9 +1,5 @@
 # KDashboard
 
-## Demonstration
-
-https://appetize.io/app/cgk7zpc5a2x163dr47qrkerxmw
-
 ## What is it ?
 
   KDashboard is a two-classes package for iOS 7+ application, allowing to create a iOS/Android-main-screen-alike view. This acts as a UICollectionView displayed on multiple pages and allow some user interaction on displayed cells :
@@ -12,7 +8,11 @@ https://appetize.io/app/cgk7zpc5a2x163dr47qrkerxmw
   * deleting cells
   * creating groups with two cells
 
-  To do so, you have to long-press cells to start dragging them. Then you can drop them wherever you want. This will perform a specific action according to where you drop it and how long dragged it over an another cell. Remember, this work like an iOS/Android main screen
+  To do so, you have to long-press cells to start dragging them. Then you can drop them wherever you want. This will perform a specific action according to where you drop it and how long you kept it over an another cell. Remember, this work like an iOS/Android main screen
+
+## Demonstration
+
+https://appetize.io/app/cgk7zpc5a2x163dr47qrkerxmw
 
 ## Usage
 
