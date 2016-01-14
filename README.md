@@ -72,9 +72,9 @@ Here is what can look like the dashboard:cellForItemAtIndex method:
 
     cell = (CollectionViewCell*) [dashboard dequeueReusableCellWithIdentifier:CELL_NAME forIndex:index]; //CELL_NAME here is the same String you put when creating your KDashboard
 
-    [cell customizeWithImage:[UIImage imageNamed:@"imagecell.png"] andText:[NSString stringWithFormat:@"cell%d",value]]; //after dequeueing your cell with the previous method, you have to customize it
+    [cell customizeWithImage:[UIImage imageNamed:@"imagecell.png"] andText:[NSString stringWithFormat:@"cell%d",index]]; //after dequeueing your cell with the previous method, you have to customize it according to the current index
     
-    return cell; // return your new cell
+    return cell; // return your freshly customized cell
 }
 ```
 
