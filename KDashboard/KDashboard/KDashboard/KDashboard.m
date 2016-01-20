@@ -741,7 +741,7 @@
         }
     }
     
-    return [self.view convertPoint:cellPosition toView:nil];
+    return [self.view convertPoint:cellPosition toView:_viewControllerEmbedder.view];
 }
 
 /**************************/
